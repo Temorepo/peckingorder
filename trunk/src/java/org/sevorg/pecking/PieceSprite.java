@@ -65,5 +65,5 @@ public class PieceSprite extends Sprite
         gfx.drawString(name, _bounds.x + 20, _bounds.y + 48);
     }
 
-    private PeckingObject.Piece _piece;
+    protected PeckingObject.Piece _piece;
 }
