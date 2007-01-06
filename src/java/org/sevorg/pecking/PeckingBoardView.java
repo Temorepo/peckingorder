@@ -1,9 +1,16 @@
 package org.sevorg.pecking;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.Stroke;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.List;
+import org.sevorg.pecking.PeckingObject.Piece;
 import com.threerings.crowd.client.PlaceView;
 import com.threerings.crowd.data.PlaceObject;
 import com.threerings.media.VirtualMediaPanel;
@@ -18,10 +25,37 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
         ElementUpdateListener
 {
 
-    public PeckingBoardView(ToyBoxContext ctx)
+    public PeckingBoardView(ToyBoxContext ctx, PeckingLogic log)
     {
         super(ctx.getFrameManager());
         _ctx = ctx;
+        this.logic = log;
+        addMouseListener(new MouseAdapter() {
+
+            public void mousePressed(MouseEvent e)
+            {
+                int col = e.getX() / PieceSprite.SIZE;
+                int row = e.getY() / PieceSprite.SIZE;
+                if(possibleMoves != null) {
+                    for(Point p : possibleMoves) {
+                        if(p.x == col && p.y == row) {
+                            // TODO - MOVE
+                            clearSelectedPiece();
+                            repaint();
+                            return;
+                        }
+                    }
+                }
+                clearSelectedPiece();
+                for(PieceSprite p : sprites) {
+                    if(p != null && p._piece.x == col && p._piece.y == row) {
+                        selectedPiece = p;
+                        possibleMoves = logic.getLegalMoves(p._piece);
+                    }
+                }
+                repaint();
+            }
+        });
     }
 
     // from interface PlaceView
@@ -60,6 +94,9 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
     {
         if(piece.x == PeckingConstants.OFF_BOARD) {
             if(sprites[index] != null) {
+                if(sprites[index] == selectedPiece) {
+                    clearSelectedPiece();
+                }
                 removeSprite(sprites[index]);
                 sprites[index] = null;
             }
@@ -73,13 +110,19 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
         }
     }
 
+    private void clearSelectedPiece()
+    {
+        selectedPiece = null;
+        possibleMoves = null;
+    }
+
     @Override
     protected void paintBehind(Graphics2D gfx, Rectangle dirtyRect)
     {
         super.paintBehind(gfx, dirtyRect);
         // fill in our background color
         gfx.setColor(Color.WHITE);
-        gfx.fillRect(0, 0, getWidth(), getHeight());
+        gfx.fill(dirtyRect);
         // draw our grid
         gfx.setColor(Color.BLACK);
         for(int yy = 0; yy <= boardSize.height; yy++) {
@@ -90,8 +133,12 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
             int xpos = xx * PieceSprite.SIZE;
             gfx.drawLine(xpos, 0, xpos, PieceSprite.SIZE * boardSize.height);
         }
+    }
+
+    protected void paintBetween(Graphics2D gfx, Rectangle dirtyRect)
+    {
         // Draw lakes in the middle of the board
-        gfx.setColor(Color.BLUE);
+        gfx.setColor(Color.DARK_GRAY);
         gfx.fillRect(2 * PieceSprite.SIZE,
                      4 * PieceSprite.SIZE,
                      2 * PieceSprite.SIZE,
@@ -100,6 +147,26 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
                      4 * PieceSprite.SIZE,
                      2 * PieceSprite.SIZE,
                      2 * PieceSprite.SIZE);
+        if(selectedPiece != null) {
+            Piece p = selectedPiece._piece;
+            gfx.setColor(Color.YELLOW);
+            Stroke current = gfx.getStroke();
+            gfx.setStroke(FAT_STROKE);
+            gfx.drawRect(p.x * PieceSprite.SIZE,
+                         p.y * PieceSprite.SIZE,
+                         PieceSprite.SIZE,
+                         PieceSprite.SIZE);
+            gfx.setColor(Color.GREEN);
+            if(possibleMoves != null) {
+                for(Point poi : possibleMoves) {
+                    gfx.drawRect(poi.x * PieceSprite.SIZE,
+                                 poi.y * PieceSprite.SIZE,
+                                 PieceSprite.SIZE,
+                                 PieceSprite.SIZE);
+                }
+            }
+            gfx.setStroke(current);
+        }
     }
 
     /** Provides access to client services. */
@@ -108,7 +175,15 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
     /** A reference to our game object. */
     protected PeckingObject _gameobj;
 
+    final private PeckingLogic logic;
+
+    private PieceSprite selectedPiece;
+
+    private List<Point> possibleMoves;
+
     private PieceSprite[] sprites = new PieceSprite[PeckingConstants.NUM_PIECES];
 
     private Dimension boardSize = new Dimension(10, 10);
+
+    private static final BasicStroke FAT_STROKE = new BasicStroke(5);
 }
