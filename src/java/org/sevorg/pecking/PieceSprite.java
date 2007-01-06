@@ -18,19 +18,18 @@ public class PieceSprite extends Sprite
     public PieceSprite(PeckingObject.Piece piece)
     {
         super(SIZE, SIZE);
-        updatePiece(piece);
+        this._piece = piece;
+        update();
     }
 
     /**
      * Called when the piece we are displaying has been updated.
      */
-    public void updatePiece(PeckingObject.Piece piece)
+    public void update()
     {
-        // keep track of our piece
-        _piece = piece;
         // set our location based on the location of the piece
         setLocation(_piece.x * SIZE, _piece.y * SIZE);
-        // force a redraw in case our color changed but not our location
+        // force a redraw in case our rank or type changed but not our location
         invalidate();
     }
 
@@ -43,7 +42,7 @@ public class PieceSprite extends Sprite
         // set our color depending on the player that owns this piece
         gfx.setColor(_piece.owner == PeckingConstants.BLUE ? Color.BLUE
                 : Color.RED);
-        // draw a filled in circle in our piece color
+        // draw a filled in rectangle in our piece color
         int px = _bounds.x + 3, py = _bounds.y + 3;
         int pwid = _bounds.width - 6, phei = _bounds.height - 6;
         gfx.fillRect(px, py, pwid, phei);
@@ -52,13 +51,15 @@ public class PieceSprite extends Sprite
         gfx.drawRect(px, py, pwid, phei);
         gfx.setFont(new Font("Helvetica", Font.BOLD, 48));
         String name;
-        if(_piece.type == PeckingConstants.CAGE){
-            name = "B";
-        }else if(_piece.type == PeckingConstants.WORM){
-            name = "F";
-        }else if(_piece.rank == 10){
-            name = "S";
-        }else{
+        if(_piece.rank == PeckingConstants.UNKNOWN) {
+            name = "";
+        } else if(_piece.type == PeckingConstants.CAGE) {
+            name = "C";
+        } else if(_piece.type == PeckingConstants.WORM) {
+            name = "W";
+        } else if(_piece.rank == 10) {
+            name = "A";
+        } else {
             name = "" + _piece.rank;
         }
         gfx.drawString(name, _bounds.x + 20, _bounds.y + 48);

@@ -7,18 +7,17 @@ import java.awt.Rectangle;
 import com.threerings.crowd.client.PlaceView;
 import com.threerings.crowd.data.PlaceObject;
 import com.threerings.media.VirtualMediaPanel;
+import com.threerings.presents.dobj.ElementUpdateListener;
+import com.threerings.presents.dobj.ElementUpdatedEvent;
 import com.threerings.toybox.util.ToyBoxContext;
 
 /**
  * Displays the main game interface (the board).
  */
-public class PeckingBoardView extends VirtualMediaPanel implements PlaceView
+public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
+        ElementUpdateListener
 {
 
-    /**
-     * Constructs a view which will initialize itself and prepare to display the
-     * game board.
-     */
     public PeckingBoardView(ToyBoxContext ctx)
     {
         super(ctx.getFrameManager());
@@ -29,17 +28,49 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView
     public void willEnterPlace(PlaceObject plobj)
     {
         _gameobj = (PeckingObject)plobj;
+        _gameobj.addListener(this);
+        for(int i = 0; i < _gameobj.pieces.length; i++) {
+            pieceUpdated(i, _gameobj.pieces[i]);
+        }
     }
 
     // from interface PlaceView
     public void didLeavePlace(PlaceObject plobj)
-    {}
+    {
+        _gameobj.removeListener(this);
+        _gameobj = null;
+    }
 
     @Override
     public Dimension getPreferredSize()
     {
         return new Dimension(boardSize.width * PieceSprite.SIZE + 1,
                              boardSize.height * PieceSprite.SIZE + 1);
+    }
+
+    public void elementUpdated(ElementUpdatedEvent event)
+    {
+        if(event.getName().equals(PeckingObject.PIECES)) {
+            pieceUpdated(event.getIndex(),
+                         (PeckingObject.Piece)event.getValue());
+        }
+    }
+
+    protected void pieceUpdated(int index, PeckingObject.Piece piece)
+    {
+        if(piece.x == PeckingConstants.OFF_BOARD) {
+            if(sprites[index] != null) {
+                removeSprite(sprites[index]);
+                sprites[index] = null;
+            }
+        } else {
+            if(sprites[index] == null) {
+                sprites[index] = new PieceSprite(piece);
+                addSprite(sprites[index]);
+            } else {
+                sprites[index].update();
+            }
+        }
     }
 
     @Override
@@ -59,7 +90,7 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView
             int xpos = xx * PieceSprite.SIZE;
             gfx.drawLine(xpos, 0, xpos, PieceSprite.SIZE * boardSize.height);
         }
-        //Draw lakes in the middle of the board
+        // Draw lakes in the middle of the board
         gfx.setColor(Color.BLUE);
         gfx.fillRect(2 * PieceSprite.SIZE,
                      4 * PieceSprite.SIZE,
@@ -76,6 +107,8 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView
 
     /** A reference to our game object. */
     protected PeckingObject _gameobj;
+
+    private PieceSprite[] sprites = new PieceSprite[PeckingConstants.NUM_PIECES];
 
     private Dimension boardSize = new Dimension(10, 10);
 }
