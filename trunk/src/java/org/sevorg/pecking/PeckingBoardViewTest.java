@@ -1,5 +1,6 @@
 package org.sevorg.pecking;
 
+import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JComponent;
 import org.sevorg.pecking.PeckingObject.Piece;
@@ -23,14 +24,40 @@ public class PeckingBoardViewTest extends GameViewTest
         return _view = new PeckingBoardView(ctx);
     }
 
+    public static List<Piece> createPieces()
+    {
+        List<Piece> pieces = new ArrayList<Piece>(40);
+        for(int i = 0; i < 2; i++) {
+            for(int j = 0; j < PeckingConstants.COUNT_BY_RANK.length; j++) {
+                for(int k = 0; k < PeckingConstants.COUNT_BY_RANK[j]; k++) {
+                    pieces.add(new Piece(i, j + 1, PeckingConstants.BIRD));
+                }
+            }
+            pieces.add(new Piece(i, -1, PeckingConstants.WORM));
+            for(int j = 0; j < 6; j++) {
+                pieces.add(new Piece(i, -1, PeckingConstants.CAGE));
+            }
+        }
+        return pieces;
+    }
+
+
     protected void initInterface()
     {
-        List<Piece> pieces = PeckingObject.createPieces();
+        List<Piece> pieces = createPieces();
         for(int i = 0; i < pieces.size(); i++) {
             Piece p = pieces.get(i);
             p.x = i%10;
             p.y = i/10;
-            _view.addSprite(new PieceSprite(p));
+            if(i%2 == 0){
+                p.type = PeckingConstants.UNKNOWN;
+                p.rank = PeckingConstants.UNKNOWN;
+                if(i%4 == 0){
+                    p.x = PeckingConstants.OFF_BOARD;
+                    p.y = PeckingConstants.OFF_BOARD;
+                }
+            }
+            _view.pieceUpdated(i, p);
         }
     }
 

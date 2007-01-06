@@ -2,128 +2,78 @@
 // $Id$
 package org.sevorg.pecking;
 
-import java.util.ArrayList;
-import java.util.List;
 import com.threerings.parlor.game.data.GameObject;
-import com.threerings.presents.dobj.DSet;
 
 /**
  * Maintains the shared state of the game.
  */
-public class PeckingObject extends GameObject implements PeckingConstants
+public class PeckingObject extends GameObject
 {
 
     // AUTO-GENERATED: FIELDS START
     /** The field name of the <code>pieces</code> field. */
     public static final String PIECES = "pieces";
-
     // AUTO-GENERATED: FIELDS END
-    public static class Piece implements DSet.Entry
+
+    public static class Piece
     {
-        
-        public Piece(){}
-        
-        public Piece(int owner, int rank, int type){
+
+        public Piece()
+        {}
+
+        public Piece(int owner, int rank, int type)
+        {
             this.owner = owner;
             this.rank = rank;
             this.type = type;
         }
 
-        public int pieceId;
-
         public int owner;
 
-        public int x, y;
+        public int x = PeckingConstants.OFF_BOARD,
+                y = PeckingConstants.OFF_BOARD;
 
-        public int rank;
+        public int rank = PeckingConstants.UNKNOWN;
 
-        public int type;
+        public int type = PeckingConstants.UNKNOWN;
 
-        public Comparable getKey()
-        {
-            return pieceId;
-        }
-    }
-
-    private static final int[] countByRank = new int[] {1,
-                                                        1,
-                                                        2,
-                                                        3,
-                                                        4,
-                                                        4,
-                                                        4,
-                                                        5,
-                                                        8,
-                                                        1};
-
-    public static List<Piece> createPieces()
-    {
-        List<Piece> pieces = new ArrayList<Piece>(40);
-        for(int i = 0; i < 2; i++) {
-            for(int j = 0; j < countByRank.length; j++) {
-                for(int k = 0; k < countByRank[j]; k++) {
-                    pieces.add(new Piece(i, j + 1, BIRD));
-                }
-            }
-            pieces.add(new Piece(i, -1, WORM));
-            for(int j = 0; j < 6; j++) {
-                pieces.add(new Piece(i, -1, CAGE));
-            }
-        }
-        return pieces;
     }
 
     /** Contains the pieces in the game. */
-    public DSet<Piece> pieces = new DSet<Piece>();
+    public Piece[] pieces = new Piece[PeckingConstants.NUM_PIECES];
 
     // AUTO-GENERATED: METHODS START
     /**
-     * Requests that the specified entry be added to the <code>pieces</code>
-     * set. The set will not change until the event is actually propagated
-     * through the system.
+     * Requests that the <code>pieces</code> field be set to the
+     * specified value. The local value will be updated immediately and an
+     * event will be propagated through the system to notify all listeners
+     * that the attribute did change. Proxied copies of this object (on
+     * clients) will apply the value change when they received the
+     * attribute changed notification.
      */
-    public void addToPieces(PeckingObject.Piece elem)
+    public void setPieces (PeckingObject.Piece[] value)
     {
-        requestEntryAdd(PIECES, pieces, elem);
+        PeckingObject.Piece[] ovalue = this.pieces;
+        requestAttributeChange(
+            PIECES, value, ovalue);
+        this.pieces = (value == null) ? null : (PeckingObject.Piece[])value.clone();
     }
 
     /**
-     * Requests that the entry matching the supplied key be removed from the
-     * <code>pieces</code> set. The set will not change until the event is
-     * actually propagated through the system.
+     * Requests that the <code>index</code>th element of
+     * <code>pieces</code> field be set to the specified value.
+     * The local value will be updated immediately and an event will be
+     * propagated through the system to notify all listeners that the
+     * attribute did change. Proxied copies of this object (on clients)
+     * will apply the value change when they received the attribute
+     * changed notification.
      */
-    public void removeFromPieces(Comparable key)
+    public void setPiecesAt (PeckingObject.Piece value, int index)
     {
-        requestEntryRemove(PIECES, pieces, key);
-    }
-
-    /**
-     * Requests that the specified entry be updated in the <code>pieces</code>
-     * set. The set will not change until the event is actually propagated
-     * through the system.
-     */
-    public void updatePieces(PeckingObject.Piece elem)
-    {
-        requestEntryUpdate(PIECES, pieces, elem);
-    }
-
-    /**
-     * Requests that the <code>pieces</code> field be set to the specified
-     * value. Generally one only adds, updates and removes entries of a
-     * distributed set, but certain situations call for a complete replacement
-     * of the set value. The local value will be updated immediately and an
-     * event will be propagated through the system to notify all listeners that
-     * the attribute did change. Proxied copies of this object (on clients) will
-     * apply the value change when they received the attribute changed
-     * notification.
-     */
-    public void setPieces(DSet<org.sevorg.pecking.PeckingObject.Piece> value)
-    {
-        requestAttributeChange(PIECES, value, this.pieces);
-        @SuppressWarnings("unchecked")
-        DSet<org.sevorg.pecking.PeckingObject.Piece> clone = (value == null) ? null
-                : value.typedClone();
-        this.pieces = clone;
+        PeckingObject.Piece ovalue = this.pieces[index];
+        requestElementUpdate(
+            PIECES, index, value, ovalue);
+        this.pieces[index] = value;
     }
     // AUTO-GENERATED: METHODS END
 }
