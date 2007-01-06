@@ -7,6 +7,7 @@ public interface PeckingConstants
 
     public static final int OFF_BOARD = -1;
 
+    //Game phases
     public static final int SETUP = 0;
 
     public static final int PLAYING = 1;

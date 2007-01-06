@@ -2,6 +2,7 @@
 // $Id$
 package org.sevorg.pecking;
 
+import com.threerings.io.Streamable;
 import com.threerings.parlor.game.data.GameObject;
 
 /**
@@ -15,7 +16,7 @@ public class PeckingObject extends GameObject
     public static final String PIECES = "pieces";
     // AUTO-GENERATED: FIELDS END
 
-    public static class Piece
+    public static class Piece implements Streamable
     {
 
         public Piece()

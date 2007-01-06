@@ -1,5 +1,6 @@
 package org.sevorg.pecking;
 
+import org.sevorg.pecking.PeckingObject.Piece;
 import com.threerings.crowd.data.PlaceObject;
 import com.threerings.parlor.game.server.GameManager;
 import com.threerings.toybox.data.ToyBoxGameConfig;
@@ -7,7 +8,7 @@ import com.threerings.toybox.data.ToyBoxGameConfig;
 /**
  * Handles the server side of the game.
  */
-public class PeckingManager extends GameManager
+public class PeckingManager extends GameManager implements PeckingConstants
 {
 
     @Override
@@ -59,6 +60,21 @@ public class PeckingManager extends GameManager
         // this is the place to do any pre-game setup that needs to be done
         // each time a game is started rather than just once at the very
         // beginning (those sorts of things should be done in didStartup())
+        Piece[] pieces = PeckingBoardViewTest.createPieces()
+                .toArray(new Piece[0]);
+        int redCount = 0, blueCount = 0;
+        for(int i = 0; i < pieces.length; i++) {
+            if(pieces[i].owner == RED) {
+                pieces[i].x = redCount % 10;
+                pieces[i].y = redCount / 10;
+                redCount++;
+            } else {
+                pieces[i].x = blueCount % 10;
+                pieces[i].y = 9 - blueCount / 10;
+                blueCount++;
+            }
+        }
+        _gameobj.setPieces(pieces);
     }
 
     @Override

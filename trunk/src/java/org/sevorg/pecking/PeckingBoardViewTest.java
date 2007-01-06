@@ -21,12 +21,12 @@ public class PeckingBoardViewTest extends GameViewTest
 
     protected JComponent createInterface(ToyBoxContext ctx)
     {
-        return _view = new PeckingBoardView(ctx, logic);
+        return _view = new PeckingBoardView(ctx, new PeckingController());
     }
 
     public static List<Piece> createPieces()
     {
-        List<Piece> pieces = new ArrayList<Piece>(40);
+        List<Piece> pieces = new ArrayList<Piece>(80);
         for(int i = 0; i < 2; i++) {
             for(int j = 0; j < PeckingConstants.COUNT_BY_RANK.length; j++) {
                 for(int k = 0; k < PeckingConstants.COUNT_BY_RANK[j]; k++) {
@@ -57,12 +57,9 @@ public class PeckingBoardViewTest extends GameViewTest
                     p.y = PeckingConstants.OFF_BOARD;
                 }
             }
-            logic.setState(pieces.toArray(new Piece[0])); 
             _view.pieceUpdated(i, p);
         }
     }
 
-    private PeckingLogic logic = new PeckingLogic();
-    
     protected PeckingBoardView _view;
 }

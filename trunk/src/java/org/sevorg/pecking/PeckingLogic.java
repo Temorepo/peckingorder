@@ -8,10 +8,11 @@ import org.sevorg.pecking.PeckingObject.Piece;
 public class PeckingLogic implements PeckingConstants
 {
 
-    public void setState(Piece[] pieces){
+    public PeckingLogic(Piece[] pieces)
+    {
         this._pieces = pieces;
     }
-    
+
     public boolean addIfLegalAndCanContinue(Piece pie,
                                             int x,
                                             int y,
@@ -76,14 +77,24 @@ public class PeckingLogic implements PeckingConstants
         return to.x >= 10 || to.x < 0 || to.y >= 10 || to.y < 0;
     }
 
-    private Piece getPieceAt(Point poi)
+    public Piece getPieceAt(Point poi)
     {
-        for(Piece p : _pieces) {
+        int idx = getPieceIdxAt(poi);
+        if(idx == -1) {
+            return null;
+        }
+        return _pieces[idx];
+    }
+
+    public int getPieceIdxAt(Point poi)
+    {
+        for(int i = 0; i < _pieces.length; i++) {
+            Piece p = _pieces[i];
             if(p.x == poi.x && p.y == poi.y) {
-                return p;
+                return i;
             }
         }
-        return null;
+        return -1;
     }
 
     private Piece[] _pieces;

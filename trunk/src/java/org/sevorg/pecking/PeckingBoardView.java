@@ -14,6 +14,8 @@ import org.sevorg.pecking.PeckingObject.Piece;
 import com.threerings.crowd.client.PlaceView;
 import com.threerings.crowd.data.PlaceObject;
 import com.threerings.media.VirtualMediaPanel;
+import com.threerings.presents.dobj.AttributeChangeListener;
+import com.threerings.presents.dobj.AttributeChangedEvent;
 import com.threerings.presents.dobj.ElementUpdateListener;
 import com.threerings.presents.dobj.ElementUpdatedEvent;
 import com.threerings.toybox.util.ToyBoxContext;
@@ -22,36 +24,35 @@ import com.threerings.toybox.util.ToyBoxContext;
  * Displays the main game interface (the board).
  */
 public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
-        ElementUpdateListener
+        ElementUpdateListener, AttributeChangeListener
 {
 
-    public PeckingBoardView(ToyBoxContext ctx, PeckingLogic log)
+    public PeckingBoardView(ToyBoxContext ctx, PeckingController ctrl)
     {
         super(ctx.getFrameManager());
         _ctx = ctx;
-        this.logic = log;
+        _ctr = ctrl;
         addMouseListener(new MouseAdapter() {
 
             public void mousePressed(MouseEvent e)
             {
                 int col = e.getX() / PieceSprite.SIZE;
                 int row = e.getY() / PieceSprite.SIZE;
+                Point click = new Point(col, row);
+                PeckingLogic logic = new PeckingLogic(_gameobj.pieces);
                 if(possibleMoves != null) {
                     for(Point p : possibleMoves) {
-                        if(p.x == col && p.y == row) {
-                            // TODO - MOVE
-                            clearSelectedPiece();
-                            repaint();
+                        if(click.equals(p)) {
+                            _ctr.move(logic.getPieceAt(p), p);
                             return;
                         }
                     }
                 }
                 clearSelectedPiece();
-                for(PieceSprite p : sprites) {
-                    if(p != null && p._piece.x == col && p._piece.y == row) {
-                        selectedPiece = p;
-                        possibleMoves = logic.getLegalMoves(p._piece);
-                    }
+                int pieceIdx = logic.getPieceIdxAt(click);
+                if(sprites[pieceIdx] != null) {
+                    selectedPiece = sprites[pieceIdx];
+                    possibleMoves = logic.getLegalMoves(sprites[pieceIdx]._piece);
                 }
                 repaint();
             }
@@ -63,8 +64,15 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
     {
         _gameobj = (PeckingObject)plobj;
         _gameobj.addListener(this);
+        updateAll();
+    }
+
+    private void updateAll()
+    {
         for(int i = 0; i < _gameobj.pieces.length; i++) {
-            pieceUpdated(i, _gameobj.pieces[i]);
+            if(_gameobj.pieces[i] != null) {
+                pieceUpdated(i, _gameobj.pieces[i]);
+            }
         }
     }
 
@@ -80,6 +88,13 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
     {
         return new Dimension(boardSize.width * PieceSprite.SIZE + 1,
                              boardSize.height * PieceSprite.SIZE + 1);
+    }
+
+    public void attributeChanged(AttributeChangedEvent event)
+    {
+        if(event.getName().equals(PeckingObject.PIECES)) {
+            updateAll();
+        }
     }
 
     public void elementUpdated(ElementUpdatedEvent event)
@@ -175,7 +190,7 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
     /** A reference to our game object. */
     protected PeckingObject _gameobj;
 
-    final private PeckingLogic logic;
+    private PeckingController _ctr;
 
     private PieceSprite selectedPiece;
 

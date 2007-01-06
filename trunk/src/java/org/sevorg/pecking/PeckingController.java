@@ -1,5 +1,7 @@
 package org.sevorg.pecking;
 
+import java.awt.Point;
+import org.sevorg.pecking.PeckingObject.Piece;
 import com.threerings.crowd.client.PlaceView;
 import com.threerings.crowd.data.PlaceObject;
 import com.threerings.crowd.util.CrowdContext;
@@ -62,6 +64,11 @@ public class PeckingController extends GameController
         super.gameDidEnd();
         // here we can clear out anything that needs to be cleared out at the
         // end of a game
+    }
+
+    public void move(Piece pieceAt, Point p)
+    {
+        //TODO
     }
 
     /** Our game panel. */

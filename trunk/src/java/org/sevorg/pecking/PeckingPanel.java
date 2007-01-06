@@ -32,7 +32,7 @@ public class PeckingPanel extends PlacePanel
         setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         setLayout(new BorderLayout());
         // create and add our board view
-        add(_bview = new PeckingBoardView(ctx, new PeckingLogic()), BorderLayout.CENTER);
+        add(_bview = new PeckingBoardView(ctx, ctrl), BorderLayout.CENTER);
         //TODO - setup logic
         // create a side panel to hold our chat and other extra interfaces
         JPanel sidePanel = GroupLayout.makeVStretchBox(5);
