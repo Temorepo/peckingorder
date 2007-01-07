@@ -9,22 +9,24 @@ import java.awt.Rectangle;
 import java.awt.Stroke;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.sevorg.pecking.PeckingObject.Piece;
 import com.threerings.crowd.client.PlaceView;
 import com.threerings.crowd.data.PlaceObject;
 import com.threerings.media.VirtualMediaPanel;
-import com.threerings.presents.dobj.AttributeChangeListener;
-import com.threerings.presents.dobj.AttributeChangedEvent;
-import com.threerings.presents.dobj.ElementUpdateListener;
-import com.threerings.presents.dobj.ElementUpdatedEvent;
+import com.threerings.presents.dobj.EntryAddedEvent;
+import com.threerings.presents.dobj.EntryRemovedEvent;
+import com.threerings.presents.dobj.EntryUpdatedEvent;
+import com.threerings.presents.dobj.SetListener;
 import com.threerings.toybox.util.ToyBoxContext;
 
 /**
  * Displays the main game interface (the board).
  */
 public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
-        ElementUpdateListener, AttributeChangeListener
+        SetListener
 {
 
     public PeckingBoardView(ToyBoxContext ctx, PeckingController ctrl)
@@ -36,26 +38,30 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
 
             public void mousePressed(MouseEvent e)
             {
-                int col = e.getX() / PieceSprite.SIZE;
-                int row = e.getY() / PieceSprite.SIZE;
-                Point click = new Point(col, row);
+                int clickX = e.getX() / PieceSprite.SIZE;
+                int clickY = e.getY() / PieceSprite.SIZE;
+                if(PeckingLogic.isInLake(clickX, clickY)
+                        || PeckingLogic.isOffBoard(clickX, clickY)) {
+                    return;
+                }
                 PeckingLogic logic = new PeckingLogic(_gameobj.pieces);
                 if(possibleMoves != null) {
+                    Point click = new Point(clickX, clickY);
                     for(Point p : possibleMoves) {
                         if(click.equals(p)) {
-                            System.out.println("MAKING MY MOVE!");
-                            _ctr.move(logic.getPieceIdx(selectedPiece._piece), p);
+                            _ctr.move(selectedPiece, p.x, p.y);
+                            getRegionManager().addDirtyRegion(new Rectangle(getPreferredSize()));
                             return;
                         }
                     }
                 }
                 clearSelectedPiece();
-                int pieceIdx = logic.getPieceIdxAt(click);
-                if(sprites[pieceIdx] != null && sprites[pieceIdx]._piece.owner == _ctr._color) {
-                    selectedPiece = sprites[pieceIdx];
-                    possibleMoves = logic.getLegalMoves(sprites[pieceIdx]._piece);
+                Piece p = logic.getPieceAt(clickX, clickY);
+                if(p.owner == _ctr._color) {
+                    selectedPiece = p;
+                    possibleMoves = logic.getLegalMoves(p);
+                    getRegionManager().addDirtyRegion(new Rectangle(getPreferredSize()));
                 }
-                repaint();
             }
         });
     }
@@ -65,15 +71,8 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
     {
         _gameobj = (PeckingObject)plobj;
         _gameobj.addListener(this);
-        updateAll();
-    }
-
-    private void updateAll()
-    {
-        for(int i = 0; i < _gameobj.pieces.length; i++) {
-            if(_gameobj.pieces[i] != null) {
-                pieceUpdated(i, _gameobj.pieces[i]);
-            }
+        for(Piece p: _gameobj.pieces) {
+            pieceUpdated(p);
         }
     }
 
@@ -91,37 +90,42 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
                              boardSize.height * PieceSprite.SIZE + 1);
     }
 
-    public void attributeChanged(AttributeChangedEvent event)
+    public void entryAdded(EntryAddedEvent event)
     {
         if(event.getName().equals(PeckingObject.PIECES)) {
-            updateAll();
+            pieceUpdated((PeckingObject.Piece)event.getEntry());
         }
     }
 
-    public void elementUpdated(ElementUpdatedEvent event)
+    public void entryRemoved(EntryRemovedEvent event)
+    {
+    // Pieces are never removed
+    }
+
+    public void entryUpdated(EntryUpdatedEvent event)
     {
         if(event.getName().equals(PeckingObject.PIECES)) {
-            pieceUpdated(event.getIndex(),
-                         (PeckingObject.Piece)event.getValue());
+            pieceUpdated((PeckingObject.Piece)event.getEntry());
         }
     }
 
-    protected void pieceUpdated(int index, PeckingObject.Piece piece)
+    protected void pieceUpdated(Piece piece)
     {
+        if(selectedPiece != null && piece.id == selectedPiece.id) {
+            clearSelectedPiece();
+        }
         if(piece.x == PeckingConstants.OFF_BOARD) {
-            if(sprites[index] != null) {
-                if(sprites[index] == selectedPiece) {
-                    clearSelectedPiece();
-                }
-                removeSprite(sprites[index]);
-                sprites[index] = null;
+            if(sprites.containsKey(piece.id)){
+                removeSprite(sprites.get(piece.id));
+                sprites.remove(piece.id);
             }
-        } else {
-            if(sprites[index] == null) {
-                sprites[index] = new PieceSprite(piece);
-                addSprite(sprites[index]);
+        }else{
+            if(!sprites.containsKey(piece.id)) {
+                PieceSprite sprite = new PieceSprite(piece);
+                sprites.put(piece.id, sprite);
+                addSprite(sprite);
             } else {
-                sprites[index].update(piece);
+                sprites.get(piece.id).update(piece);
             }
         }
     }
@@ -130,6 +134,7 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
     {
         selectedPiece = null;
         possibleMoves = null;
+        getRegionManager().addDirtyRegion(new Rectangle(getPreferredSize()));
     }
 
     @Override
@@ -164,14 +169,11 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
                      2 * PieceSprite.SIZE,
                      2 * PieceSprite.SIZE);
         if(selectedPiece != null) {
-            Piece p = selectedPiece._piece;
             gfx.setColor(Color.YELLOW);
             Stroke current = gfx.getStroke();
             gfx.setStroke(FAT_STROKE);
-            gfx.drawRect(p.x * PieceSprite.SIZE,
-                         p.y * PieceSprite.SIZE,
-                         PieceSprite.SIZE,
-                         PieceSprite.SIZE);
+            gfx.drawRect(selectedPiece.x * PieceSprite.SIZE, selectedPiece.y
+                    * PieceSprite.SIZE, PieceSprite.SIZE, PieceSprite.SIZE);
             gfx.setColor(Color.GREEN);
             if(possibleMoves != null) {
                 for(Point poi : possibleMoves) {
@@ -193,11 +195,11 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
 
     private PeckingController _ctr;
 
-    private PieceSprite selectedPiece;
+    private Piece selectedPiece;
 
     private List<Point> possibleMoves;
 
-    private PieceSprite[] sprites = new PieceSprite[PeckingConstants.NUM_PIECES];
+    private Map<Comparable, PieceSprite> sprites = new HashMap<Comparable, PieceSprite>();
 
     private Dimension boardSize = new Dimension(10, 10);
 

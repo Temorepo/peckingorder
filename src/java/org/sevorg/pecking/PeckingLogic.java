@@ -4,11 +4,12 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
 import org.sevorg.pecking.PeckingObject.Piece;
+import com.threerings.presents.dobj.DSet;
 
 public class PeckingLogic implements PeckingConstants
 {
 
-    public PeckingLogic(Piece[] pieces)
+    public PeckingLogic(DSet<Piece> pieces)
     {
         this._pieces = pieces;
     }
@@ -28,47 +29,27 @@ public class PeckingLogic implements PeckingConstants
             y = p.y;
             while(addIfLegalAndCanContinue(p, x, --y, points)) {}
         } else {
-            Point[] cardinalPoints = new Point[] {new Point(p.x + 1, p.y),
-                                                  new Point(p.x - 1, p.y),
-                                                  new Point(p.x, p.y + 1),
-                                                  new Point(p.x, p.y - 1)};
-            for(Point point : cardinalPoints) {
-                if(isLegal(p, point)) {
-                    points.add(point);
+            int[][] cardinalPoints = new int[][] { {p.x + 1, p.y},
+                                                  {p.x - 1, p.y},
+                                                  {p.x, p.y + 1},
+                                                  {p.x, p.y - 1}};
+            for(int[] point : cardinalPoints) {
+                if(isLegal(p, point[0], point[1])) {
+                    points.add(new Point(point[0], point[1]));
                 }
             }
         }
         return points;
     }
 
-    public Piece getPieceAt(Point poi)
+    public Piece getPieceAt(int x, int y)
     {
-        int idx = getPieceIdxAt(poi);
-        if(idx == -1) {
-            return null;
-        }
-        return _pieces[idx];
-    }
-
-    public int getPieceIdxAt(Point poi)
-    {
-        for(int i = 0; i < _pieces.length; i++) {
-            Piece p = _pieces[i];
-            if(p.x == poi.x && p.y == poi.y) {
-                return i;
+        for(Piece p : _pieces) {
+            if(p.x == x && p.y == y) {
+                return p;
             }
         }
-        return -1;
-    }
-
-    public int getPieceIdx(Piece p)
-    {
-        for(int i = 0; i < _pieces.length; i++) {
-            if(p == _pieces[i]){
-                return i;
-            }
-        }
-        return -1;
+        return null;
     }
 
     private boolean addIfLegalAndCanContinue(Piece pie,
@@ -76,21 +57,20 @@ public class PeckingLogic implements PeckingConstants
                                              int y,
                                              List<Point> points)
     {
-        Point poi = new Point(x, y);
-        if(isLegal(pie, poi)) {
-            points.add(poi);
+        if(isLegal(pie, x, y)) {
+            points.add(new Point(x, y));
         } else {
             return false;
         }
-        return getPieceAt(poi) == null;
+        return getPieceAt(x, y) == null;
     }
 
-    public boolean isLegal(Piece piece, Point to)
+    public boolean isLegal(Piece piece, int x, int y)
     {
-        if(isOffBoard(to) || isInLake(to) || isImmobile(piece)) {
+        if(isOffBoard(x, y) || isInLake(x, y) || isImmobile(piece)) {
             return false;
         }
-        Piece other = getPieceAt(to);
+        Piece other = getPieceAt(x, y);
         return other == null || other.owner != piece.owner;
     }
 
@@ -99,43 +79,40 @@ public class PeckingLogic implements PeckingConstants
         return piece.rank == WORM || piece.rank == CAGE;
     }
 
-    public void move(int idx, int x, int y, PeckingObject _gameobj)
+    public void move(Piece src, int x, int y, PeckingObject _gameobj)
     {
-        Piece src = _gameobj.pieces[idx];
-        int destIdx = getPieceIdxAt(new Point(x, y));
-        if(destIdx == -1){
+        Piece dest = getPieceAt(x, y);
+        if(dest == null) {
             // Simplest case, we're moving to an empty dest
-            _gameobj.move(idx, x, y);
+            _gameobj.move(src, x, y);
             return;
         }
-        Piece dest = _gameobj.pieces[idx];
         if(dest.rank == CAGE) {
             if(src.rank == CAGE_OPENER) {
-                _gameobj.replace(destIdx, idx);
+                _gameobj.replace(dest, src);
             } else {
-                _gameobj.removeFromBoard(idx);
+                _gameobj.removeFromBoard(src);
             }
-        } else if((src.rank == ASSASSIN && dest.rank == MARSHALL) ||
-                (src.rank > dest.rank)) {
-            _gameobj.replace(destIdx, idx);
-        }  else if(src.rank == dest.rank) {
-            _gameobj.removeFromBoard(idx);
-            _gameobj.removeFromBoard(destIdx);
+        } else if((src.rank == ASSASSIN && dest.rank == MARSHALL)
+                || (src.rank < dest.rank)) {
+            _gameobj.replace(dest, src);
+        } else if(src.rank == dest.rank) {
+            _gameobj.removeFromBoard(src);
+            _gameobj.removeFromBoard(dest);
         } else {
-            _gameobj.removeFromBoard(idx);
+            _gameobj.removeFromBoard(src);
         }
     }
 
-    private boolean isInLake(Point to)
+    public static boolean isInLake(int x, int y)
     {
-        return (to.x == 2 || to.x == 3 || to.x == 6 || to.x == 7)
-                && (to.y == 4 || to.y == 5);
+        return (x == 2 || x == 3 || x == 6 || x == 7) && (y == 4 || y == 5);
     }
 
-    private boolean isOffBoard(Point to)
+    public static boolean isOffBoard(int x, int y)
     {
-        return to.x >= 10 || to.x < 0 || to.y >= 10 || to.y < 0;
+        return x >= 10 || x < 0 || y >= 10 || y < 0;
     }
 
-    private Piece[] _pieces;
+    private DSet<Piece> _pieces;
 }

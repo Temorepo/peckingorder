@@ -1,6 +1,6 @@
 package org.sevorg.pecking;
 
-import java.awt.Point;
+import org.sevorg.pecking.PeckingObject.Piece;
 import com.threerings.crowd.client.PlaceView;
 import com.threerings.crowd.data.PlaceObject;
 import com.threerings.crowd.util.CrowdContext;
@@ -67,10 +67,10 @@ public class PeckingController extends GameController
         // end of a game
     }
 
-    public void move(int idx, Point p)
+    public void move(Piece pie, int x, int y)
     {
         // tell the server we want to place our piece here
-        _gameobj.manager.invoke("movePiece", idx, p.x, p.y);
+        _gameobj.manager.invoke("movePiece", pie, x, y);
     }
 
     /** Our game panel. */

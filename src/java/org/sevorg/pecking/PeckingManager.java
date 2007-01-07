@@ -1,6 +1,5 @@
 package org.sevorg.pecking;
 
-import java.awt.Point;
 import org.sevorg.pecking.PeckingObject.Piece;
 import com.threerings.crowd.data.BodyObject;
 import com.threerings.crowd.data.PlaceObject;
@@ -84,8 +83,9 @@ public class PeckingManager extends GameManager implements PeckingConstants,
                 pieces[i].y = 9 - blueCount / 10;
                 blueCount++;
             }
+            pieces[i].id = i;
+            _gameobj.addToPieces(pieces[i]);
         }
-        _gameobj.setPieces(pieces);
     }
 
     @Override
@@ -114,7 +114,7 @@ public class PeckingManager extends GameManager implements PeckingConstants,
         
     }
 
-    public void movePiece(BodyObject player, int idx, int x, int y)
+    public void movePiece(BodyObject player, Piece p, int x, int y)
     {
         // make sure it's this player's turn
         int pidx = _turndel.getTurnHolderIndex();
@@ -125,14 +125,14 @@ public class PeckingManager extends GameManager implements PeckingConstants,
             return;
         }
         PeckingLogic logic = new PeckingLogic(_gameobj.pieces);
-        System.err.println("We were told to move "+ idx + " to " + x + " " + y);
+        System.err.println("We were told to move "+ p + " to " + x + " " + y);
         
-        if(!logic.isLegal(_gameobj.pieces[idx], new Point(x, y))) {
+        if(!logic.isLegal(p, x, y)) {
             System.err.println("Received illegal move request " + "[who="
-                    + player.who() + ", piece=" + _gameobj.pieces[idx] + "].");
+                    + player.who() + ", piece=" + p + "].");
             return;
         }
-        logic.move(idx, x, y, _gameobj);
+        logic.move(p, x, y, _gameobj);
         _turndel.endTurn();
     }
 
