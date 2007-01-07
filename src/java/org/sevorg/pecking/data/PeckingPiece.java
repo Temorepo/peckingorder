@@ -1,8 +1,9 @@
 package org.sevorg.pecking.data;
 
+import org.sevorg.pecking.PeckingConstants;
 import com.threerings.presents.dobj.DSet;
 
-public class PeckingPiece implements DSet.Entry
+public class PeckingPiece implements DSet.Entry, PeckingConstants
 {
 
     /**
@@ -16,7 +17,7 @@ public class PeckingPiece implements DSet.Entry
      */
     public PeckingPiece(int owner, int rank)
     {
-        this(owner, rank, PeckingObject.OFF_BOARD, PeckingObject.OFF_BOARD);
+        this(owner, rank, OFF_BOARD, OFF_BOARD);
     }
 
     /**
@@ -44,7 +45,7 @@ public class PeckingPiece implements DSet.Entry
      */
     public int owner;
 
-    public int x = PeckingObject.OFF_BOARD, y = PeckingObject.OFF_BOARD;
+    public int x = OFF_BOARD, y = OFF_BOARD;
 
     public int id;
 
@@ -53,7 +54,7 @@ public class PeckingPiece implements DSet.Entry
      * value, the stronger the piece. Some ranks have special meanings as
      * indicated in PeckingConstants.
      */
-    public int rank = PeckingObject.UNKNOWN;
+    public int rank = UNKNOWN;
 
     public Comparable getKey()
     {
