@@ -30,12 +30,8 @@ public class PeckingBoardViewTest extends GameViewTest
         for(int i = 0; i < 2; i++) {
             for(int j = 0; j < PeckingConstants.COUNT_BY_RANK.length; j++) {
                 for(int k = 0; k < PeckingConstants.COUNT_BY_RANK[j]; k++) {
-                    pieces.add(new Piece(i, j + 1, PeckingConstants.BIRD));
+                    pieces.add(new Piece(i, j + 1));
                 }
-            }
-            pieces.add(new Piece(i, -1, PeckingConstants.WORM));
-            for(int j = 0; j < 6; j++) {
-                pieces.add(new Piece(i, -1, PeckingConstants.CAGE));
             }
         }
         return pieces;
@@ -50,7 +46,6 @@ public class PeckingBoardViewTest extends GameViewTest
             p.x = i%10;
             p.y = i/10;
             if(i%2 == 0){
-                p.type = PeckingConstants.UNKNOWN;
                 p.rank = PeckingConstants.UNKNOWN;
                 if(i%4 == 0){
                     p.x = PeckingConstants.OFF_BOARD;

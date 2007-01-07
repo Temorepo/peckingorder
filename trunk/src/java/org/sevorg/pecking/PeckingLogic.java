@@ -30,7 +30,7 @@ public class PeckingLogic implements PeckingConstants
     public List<Point> getLegalMoves(Piece p)
     {
         List<Point> points = new ArrayList<Point>();
-        if(p.type == CAGE || p.type == WORM) {
+        if(p.rank == CAGE || p.rank == WORM) {
             // Can't move at all
         } else if(p.rank == SCOUT) {
             int x = p.x, y = p.y;
