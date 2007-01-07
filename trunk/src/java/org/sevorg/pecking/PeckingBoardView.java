@@ -12,7 +12,6 @@ import java.awt.event.MouseEvent;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.sevorg.pecking.PeckingObject.Piece;
 import com.threerings.crowd.client.PlaceView;
 import com.threerings.crowd.data.PlaceObject;
 import com.threerings.media.VirtualMediaPanel;
@@ -56,7 +55,7 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
                     }
                 }
                 clearSelectedPiece();
-                Piece p = logic.getPieceAt(clickX, clickY);
+                PeckingPiece p = logic.getPieceAt(clickX, clickY);
                 if(p.owner == _ctr._color) {
                     selectedPiece = p;
                     possibleMoves = logic.getLegalMoves(p);
@@ -71,7 +70,7 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
     {
         _gameobj = (PeckingObject)plobj;
         _gameobj.addListener(this);
-        for(Piece p: _gameobj.pieces) {
+        for(PeckingPiece p: _gameobj.pieces) {
             pieceUpdated(p);
         }
     }
@@ -93,7 +92,7 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
     public void entryAdded(EntryAddedEvent event)
     {
         if(event.getName().equals(PeckingObject.PIECES)) {
-            pieceUpdated((PeckingObject.Piece)event.getEntry());
+            pieceUpdated((PeckingPiece)event.getEntry());
         }
     }
 
@@ -105,11 +104,11 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
     public void entryUpdated(EntryUpdatedEvent event)
     {
         if(event.getName().equals(PeckingObject.PIECES)) {
-            pieceUpdated((PeckingObject.Piece)event.getEntry());
+            pieceUpdated((PeckingPiece)event.getEntry());
         }
     }
 
-    protected void pieceUpdated(Piece piece)
+    protected void pieceUpdated(PeckingPiece piece)
     {
         if(selectedPiece != null && piece.id == selectedPiece.id) {
             clearSelectedPiece();
@@ -195,7 +194,7 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
 
     private PeckingController _ctr;
 
-    private Piece selectedPiece;
+    private PeckingPiece selectedPiece;
 
     private List<Point> possibleMoves;
 
