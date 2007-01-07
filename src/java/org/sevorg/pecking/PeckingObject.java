@@ -22,11 +22,10 @@ public class PeckingObject extends GameObject
         public Piece()
         {}
 
-        public Piece(int owner, int rank, int type)
+        public Piece(int owner, int rank)
         {
             this.owner = owner;
             this.rank = rank;
-            this.type = type;
         }
 
         public int owner;
@@ -35,8 +34,6 @@ public class PeckingObject extends GameObject
                 y = PeckingConstants.OFF_BOARD;
 
         public int rank = PeckingConstants.UNKNOWN;
-
-        public int type = PeckingConstants.UNKNOWN;
 
     }
 

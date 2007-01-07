@@ -16,15 +16,8 @@ public interface PeckingConstants
 
     public static final int BLUE = 1;
 
-    // Both type and rank on Piece use this for unknown
+    // Rank on Piece uses this for unknown
     public static final int UNKNOWN = -1;
-
-    // Types of pieces
-    public static final int CAGE = 0;
-
-    public static final int WORM = 1;
-
-    public static final int BIRD = 2;
 
     public static final int[] COUNT_BY_RANK = new int[] {1,
                                                          1,
@@ -35,6 +28,8 @@ public interface PeckingConstants
                                                          4,
                                                          5,
                                                          8,
+                                                         1,
+                                                         6,
                                                          1};
 
     // Ranks with special abilities. The ranks 1-7 just indicate their strength
@@ -43,4 +38,9 @@ public interface PeckingConstants
     public static final int SCOUT = 9;
 
     public static final int ASSASSIN = 10;
+    
+    //Ranks that can't move
+    public static final int CAGE = 11;
+
+    public static final int WORM = 12;
 }

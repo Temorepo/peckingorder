@@ -53,9 +53,9 @@ public class PieceSprite extends Sprite
         String name;
         if(_piece.rank == PeckingConstants.UNKNOWN) {
             name = "";
-        } else if(_piece.type == PeckingConstants.CAGE) {
+        } else if(_piece.rank == PeckingConstants.CAGE) {
             name = "C";
-        } else if(_piece.type == PeckingConstants.WORM) {
+        } else if(_piece.rank == PeckingConstants.WORM) {
             name = "W";
         } else if(_piece.rank == 10) {
             name = "A";
