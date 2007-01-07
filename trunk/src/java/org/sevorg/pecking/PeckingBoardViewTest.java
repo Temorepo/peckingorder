@@ -52,7 +52,7 @@ public class PeckingBoardViewTest extends GameViewTest
                     p.y = PeckingConstants.OFF_BOARD;
                 }
             }
-            _view.pieceUpdated(i, p);
+            _view.pieceUpdated(p);
         }
     }
 

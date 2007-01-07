@@ -2,9 +2,9 @@
 // $Id$
 package org.sevorg.pecking;
 
-import com.threerings.io.Streamable;
 import com.threerings.parlor.game.data.GameObject;
 import com.threerings.parlor.turn.data.TurnGameObject;
+import com.threerings.presents.dobj.DSet;
 import com.threerings.util.Name;
 
 /**
@@ -22,7 +22,7 @@ public class PeckingObject extends GameObject implements TurnGameObject,
     public static final String PIECES = "pieces";
     // AUTO-GENERATED: FIELDS END
 
-    public static class Piece implements Streamable
+    public static class Piece implements DSet.Entry
     {
 
         /**
@@ -57,43 +57,52 @@ public class PeckingObject extends GameObject implements TurnGameObject,
 
         public int x = OFF_BOARD, y = OFF_BOARD;
 
+        public int id;
+
         /*
          * The strength of a piece in a fight, starting with 1. The lower the
          * value, the stronger the piece. Some ranks have special meanings as
          * indicated in PeckingConstants.
          */
         public int rank = UNKNOWN;
+
+        public Comparable getKey()
+        {
+            return id;
+        }
+        
+        public String toString(){
+            return "Piece " + id + " " + x + ", " + y;
+        }
     }
 
     /**
      * Puts the piece of index newOccupentIdx at the position of the piece of
      * currentOccupantIdx and moves currentOccupantIdx off the board
      */
-    public void replace(int currentOccupantIdx, int newOccupantIdx)
+    public void replace(Piece currentOccupant, Piece newOccupant)
     {
-        setPiecesAt(new Piece(pieces[newOccupantIdx].owner,
-                              pieces[newOccupantIdx].rank,
-                              pieces[currentOccupantIdx].x,
-                              pieces[currentOccupantIdx].y), newOccupantIdx);
-        setPiecesAt(new Piece(pieces[currentOccupantIdx].owner,
-                              pieces[currentOccupantIdx].rank),
-                    currentOccupantIdx);
+        move(newOccupant, currentOccupant.x, currentOccupant.y);
+        removeFromBoard(currentOccupant);
     }
 
     /**
-     * Moves the piece at idx off the board
+     * Moves the piece p off the board
      */
-    public void removeFromBoard(int idx)
+    public void removeFromBoard(Piece p)
     {
-        setPiecesAt(new Piece(pieces[idx].owner, pieces[idx].rank), idx);
+       move(p, OFF_BOARD, OFF_BOARD);
     }
 
     /**
-     * Moves the piece at idx to position x, y which should be free
+     * Moves the piece p to position x, y which should be free
      */
-    public void move(int idx, int x, int y)
+    public void move(Piece p, int x, int y)
     {
-        setPiecesAt(new Piece(pieces[idx].owner, pieces[idx].rank, x, y), idx);
+        System.err.println("Moving " + p + " to " + x + "," + y);
+        Piece newPiece = new Piece(p.owner, p.rank, x, y);
+        newPiece.id = p.id;
+        updatePieces(newPiece);
     }
 
     // from interface TurnGameObject
@@ -118,7 +127,7 @@ public class PeckingObject extends GameObject implements TurnGameObject,
     public Name turnHolder;
 
     /** Contains the pieces in the game. */
-    public Piece[] pieces = new Piece[PeckingConstants.NUM_PIECES];
+    public DSet<Piece> pieces = new DSet<Piece>();
 
     // AUTO-GENERATED: METHODS START
     /**
@@ -138,36 +147,51 @@ public class PeckingObject extends GameObject implements TurnGameObject,
     }
 
     /**
-     * Requests that the <code>pieces</code> field be set to the
-     * specified value. The local value will be updated immediately and an
-     * event will be propagated through the system to notify all listeners
-     * that the attribute did change. Proxied copies of this object (on
-     * clients) will apply the value change when they received the
-     * attribute changed notification.
+     * Requests that the specified entry be added to the
+     * <code>pieces</code> set. The set will not change until the event is
+     * actually propagated through the system.
      */
-    public void setPieces (PeckingObject.Piece[] value)
+    public void addToPieces (PeckingObject.Piece elem)
     {
-        PeckingObject.Piece[] ovalue = this.pieces;
-        requestAttributeChange(
-            PIECES, value, ovalue);
-        this.pieces = (value == null) ? null : (PeckingObject.Piece[])value.clone();
+        requestEntryAdd(PIECES, pieces, elem);
     }
 
     /**
-     * Requests that the <code>index</code>th element of
-     * <code>pieces</code> field be set to the specified value.
-     * The local value will be updated immediately and an event will be
-     * propagated through the system to notify all listeners that the
-     * attribute did change. Proxied copies of this object (on clients)
-     * will apply the value change when they received the attribute
-     * changed notification.
+     * Requests that the entry matching the supplied key be removed from
+     * the <code>pieces</code> set. The set will not change until the
+     * event is actually propagated through the system.
      */
-    public void setPiecesAt (PeckingObject.Piece value, int index)
+    public void removeFromPieces (Comparable key)
     {
-        PeckingObject.Piece ovalue = this.pieces[index];
-        requestElementUpdate(
-            PIECES, index, value, ovalue);
-        this.pieces[index] = value;
+        requestEntryRemove(PIECES, pieces, key);
+    }
+
+    /**
+     * Requests that the specified entry be updated in the
+     * <code>pieces</code> set. The set will not change until the event is
+     * actually propagated through the system.
+     */
+    public void updatePieces (PeckingObject.Piece elem)
+    {
+        requestEntryUpdate(PIECES, pieces, elem);
+    }
+
+    /**
+     * Requests that the <code>pieces</code> field be set to the
+     * specified value. Generally one only adds, updates and removes
+     * entries of a distributed set, but certain situations call for a
+     * complete replacement of the set value. The local value will be
+     * updated immediately and an event will be propagated through the
+     * system to notify all listeners that the attribute did
+     * change. Proxied copies of this object (on clients) will apply the
+     * value change when they received the attribute changed notification.
+     */
+    public void setPieces (DSet<org.sevorg.pecking.PeckingObject.Piece> value)
+    {
+        requestAttributeChange(PIECES, value, this.pieces);
+        @SuppressWarnings("unchecked") DSet<org.sevorg.pecking.PeckingObject.Piece> clone =
+            (value == null) ? null : value.typedClone();
+        this.pieces = clone;
     }
     // AUTO-GENERATED: METHODS END
 }
