@@ -43,14 +43,15 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
                 if(possibleMoves != null) {
                     for(Point p : possibleMoves) {
                         if(click.equals(p)) {
-                            _ctr.move(logic.getPieceAt(p), p);
+                            System.out.println("MAKING MY MOVE!");
+                            _ctr.move(logic.getPieceIdx(selectedPiece._piece), p);
                             return;
                         }
                     }
                 }
                 clearSelectedPiece();
                 int pieceIdx = logic.getPieceIdxAt(click);
-                if(sprites[pieceIdx] != null) {
+                if(sprites[pieceIdx] != null && sprites[pieceIdx]._piece.owner == _ctr._color) {
                     selectedPiece = sprites[pieceIdx];
                     possibleMoves = logic.getLegalMoves(sprites[pieceIdx]._piece);
                 }
@@ -120,7 +121,7 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
                 sprites[index] = new PieceSprite(piece);
                 addSprite(sprites[index]);
             } else {
-                sprites[index].update();
+                sprites[index].update(piece);
             }
         }
     }
