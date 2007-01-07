@@ -1,5 +1,8 @@
 package org.sevorg.pecking.server;
 
+import java.util.HashSet;
+import java.util.Random;
+import java.util.Set;
 import org.sevorg.pecking.PeckingConstants;
 import org.sevorg.pecking.PeckingLogic;
 import org.sevorg.pecking.client.PeckingBoardViewTest;
@@ -76,6 +79,8 @@ public class PeckingManager extends GameManager implements PeckingConstants,
         // beginning (those sorts of things should be done in didStartup())
         PeckingPiece[] pieces = PeckingBoardViewTest.createPieces()
                 .toArray(new PeckingPiece[0]);
+        Set used = new HashSet();
+        Random r = new Random();
         int redCount = 0, blueCount = 0;
         for(int i = 0; i < pieces.length; i++) {
             if(pieces[i].owner == RED) {
@@ -87,7 +92,16 @@ public class PeckingManager extends GameManager implements PeckingConstants,
                 pieces[i].y = 9 - blueCount / 10;
                 blueCount++;
             }
-            pieces[i].id = i;
+            // Give each piece a distinct, random id
+            // The id can't just be the array index(or any other constant
+            // assignment) as that would allow a cheating client to figure out
+            // the rank of a piece given its id
+            int perhapsId;
+            do {
+                perhapsId = r.nextInt();
+            } while(used.contains(perhapsId));
+            used.add(perhapsId);
+            pieces[i].id = perhapsId;
             _gameobj.addToPieces(pieces[i]);
         }
     }
