@@ -1,4 +1,4 @@
-package org.sevorg.pecking;
+package org.sevorg.pecking.client;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -12,6 +12,10 @@ import java.awt.event.MouseEvent;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.sevorg.pecking.PeckingConstants;
+import org.sevorg.pecking.PeckingLogic;
+import org.sevorg.pecking.data.PeckingObject;
+import org.sevorg.pecking.data.PeckingPiece;
 import com.threerings.crowd.client.PlaceView;
 import com.threerings.crowd.data.PlaceObject;
 import com.threerings.media.VirtualMediaPanel;

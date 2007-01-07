@@ -1,4 +1,4 @@
-package org.sevorg.pecking;
+package org.sevorg.pecking.data;
 
 import com.threerings.presents.dobj.DSet;
 

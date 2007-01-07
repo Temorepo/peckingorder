@@ -4,8 +4,8 @@
   <ident>pecking</ident>
 
   <!-- the controller and manager used for the game -->
-  <controller>org.sevorg.pecking.PeckingController</controller>
-  <manager>org.sevorg.pecking.PeckingManager</manager>
+  <controller>org.sevorg.pecking.client.PeckingController</controller>
+  <manager>org.sevorg.pecking.server.PeckingManager</manager>
 
   <!-- defines how the game is matchmade and configured -->
   <match type="table">

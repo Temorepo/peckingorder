@@ -70,5 +70,9 @@ public interface PeckingConstants
      */
     public static final int CAGE = 11;
 
+    /**
+     * An immobile item that any moving piece can capture. If captured, the game
+     * ends.
+     */
     public static final int WORM = 12;
 }

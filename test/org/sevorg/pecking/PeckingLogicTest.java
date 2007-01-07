@@ -1,5 +1,6 @@
 package org.sevorg.pecking;
 
+import org.sevorg.pecking.data.PeckingPiece;
 import junit.framework.TestCase;
 import com.threerings.presents.dobj.DSet;
 

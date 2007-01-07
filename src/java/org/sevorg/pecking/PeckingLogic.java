@@ -3,6 +3,8 @@ package org.sevorg.pecking;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
+import org.sevorg.pecking.data.PeckingObject;
+import org.sevorg.pecking.data.PeckingPiece;
 import com.threerings.presents.dobj.DSet;
 
 public class PeckingLogic implements PeckingConstants

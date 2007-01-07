@@ -1,8 +1,10 @@
-package org.sevorg.pecking;
+package org.sevorg.pecking.client;
 
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JComponent;
+import org.sevorg.pecking.PeckingConstants;
+import org.sevorg.pecking.data.PeckingPiece;
 import com.threerings.toybox.util.GameViewTest;
 import com.threerings.toybox.util.ToyBoxContext;
 
