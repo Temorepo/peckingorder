@@ -11,7 +11,8 @@ import com.threerings.toybox.util.ToyBoxContext;
 /**
  * A test harness for our board view.
  */
-public class PeckingBoardViewTest extends GameViewTest
+public class PeckingBoardViewTest extends GameViewTest implements
+        PeckingConstants
 {
 
     public static void main(String[] args)
@@ -29,8 +30,8 @@ public class PeckingBoardViewTest extends GameViewTest
     {
         List<PeckingPiece> pieces = new ArrayList<PeckingPiece>(80);
         for(int i = 0; i < 2; i++) {
-            for(int j = 0; j < PeckingConstants.COUNT_BY_RANK.length; j++) {
-                for(int k = 0; k < PeckingConstants.COUNT_BY_RANK[j]; k++) {
+            for(int j = 0; j < COUNT_BY_RANK.length; j++) {
+                for(int k = 0; k < COUNT_BY_RANK[j]; k++) {
                     pieces.add(new PeckingPiece(i, j + 1));
                 }
             }
@@ -38,19 +39,18 @@ public class PeckingBoardViewTest extends GameViewTest
         return pieces;
     }
 
-
     protected void initInterface()
     {
         List<PeckingPiece> pieces = createPieces();
         for(int i = 0; i < pieces.size(); i++) {
             PeckingPiece p = pieces.get(i);
-            p.x = i%10;
-            p.y = i/10;
-            if(i%2 == 0){
-                p.rank = PeckingConstants.UNKNOWN;
-                if(i%4 == 0){
-                    p.x = PeckingConstants.OFF_BOARD;
-                    p.y = PeckingConstants.OFF_BOARD;
+            p.x = i % 10;
+            p.y = i / 10;
+            if(i % 2 == 0) {
+                p.rank = UNKNOWN;
+                if(i % 4 == 0) {
+                    p.x = OFF_BOARD;
+                    p.y = OFF_BOARD;
                 }
             }
             _view.pieceUpdated(p);

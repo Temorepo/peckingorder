@@ -29,7 +29,7 @@ import com.threerings.toybox.util.ToyBoxContext;
  * Displays the main game interface (the board).
  */
 public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
-        SetListener
+        SetListener, PeckingConstants
 {
 
     public PeckingBoardView(ToyBoxContext ctx, PeckingController ctrl)
@@ -117,7 +117,7 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
         if(selectedPiece != null && piece.id == selectedPiece.id) {
             clearSelectedPiece();
         }
-        if(piece.x == PeckingConstants.OFF_BOARD) {
+        if(piece.x == OFF_BOARD) {
             if(sprites.containsKey(piece.id)){
                 removeSprite(sprites.get(piece.id));
                 sprites.remove(piece.id);

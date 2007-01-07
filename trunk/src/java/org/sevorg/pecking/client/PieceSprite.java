@@ -8,7 +8,7 @@ import org.sevorg.pecking.PeckingConstants;
 import org.sevorg.pecking.data.PeckingPiece;
 import com.threerings.media.sprite.Sprite;
 
-public class PieceSprite extends Sprite
+public class PieceSprite extends Sprite implements PeckingConstants
 {
 
     /** The dimensions of our sprite in pixels. */
@@ -54,13 +54,13 @@ public class PieceSprite extends Sprite
         gfx.drawRect(px, py, pwid, phei);
         gfx.setFont(new Font("Helvetica", Font.BOLD, 48));
         String name;
-        if(_piece.rank == PeckingConstants.UNKNOWN) {
+        if(_piece.rank == UNKNOWN) {
             name = "";
-        } else if(_piece.rank == PeckingConstants.CAGE) {
+        } else if(_piece.rank == CAGE) {
             name = "C";
-        } else if(_piece.rank == PeckingConstants.WORM) {
+        } else if(_piece.rank == WORM) {
             name = "W";
-        } else if(_piece.rank == 10) {
+        } else if(_piece.rank == ASSASSIN) {
             name = "A";
         } else {
             name = "" + _piece.rank;
