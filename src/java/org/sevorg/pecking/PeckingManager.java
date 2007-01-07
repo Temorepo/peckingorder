@@ -1,6 +1,5 @@
 package org.sevorg.pecking;
 
-import org.sevorg.pecking.PeckingObject.Piece;
 import com.threerings.crowd.data.BodyObject;
 import com.threerings.crowd.data.PlaceObject;
 import com.threerings.parlor.game.server.GameManager;
@@ -70,8 +69,8 @@ public class PeckingManager extends GameManager implements PeckingConstants,
         // this is the place to do any pre-game setup that needs to be done
         // each time a game is started rather than just once at the very
         // beginning (those sorts of things should be done in didStartup())
-        Piece[] pieces = PeckingBoardViewTest.createPieces()
-                .toArray(new Piece[0]);
+        PeckingPiece[] pieces = PeckingBoardViewTest.createPieces()
+                .toArray(new PeckingPiece[0]);
         int redCount = 0, blueCount = 0;
         for(int i = 0; i < pieces.length; i++) {
             if(pieces[i].owner == RED) {
@@ -99,22 +98,33 @@ public class PeckingManager extends GameManager implements PeckingConstants,
         // including calling this method
     }
 
+    @Override
+    // from GameManager
+    protected void assignWinners(boolean[] winners)
+    {
+        super.assignWinners(winners);
+        PeckingLogic logic = new PeckingLogic(_gameobj.pieces);
+        // A player is a winner if his opponents worm is off the board and
+        // either he can move, or both he and his opponent can't move which is a
+        // draw
+        winners[RED] = logic.isWinner(RED);
+        winners[BLUE] = logic.isWinner(BLUE);
+    }
+
     public void turnDidEnd()
     {
-        //TODO - Check for game over
+        if(new PeckingLogic(_gameobj.pieces).shouldEndGame()) {
+            endGame();
+        }
     }
 
     public void turnDidStart()
-    {
-        
-    }
+    {}
 
     public void turnWillStart()
-    {
-        
-    }
+    {}
 
-    public void movePiece(BodyObject player, Piece p, int x, int y)
+    public void movePiece(BodyObject player, PeckingPiece p, int x, int y)
     {
         // make sure it's this player's turn
         int pidx = _turndel.getTurnHolderIndex();
@@ -125,8 +135,7 @@ public class PeckingManager extends GameManager implements PeckingConstants,
             return;
         }
         PeckingLogic logic = new PeckingLogic(_gameobj.pieces);
-        System.err.println("We were told to move "+ p + " to " + x + " " + y);
-        
+        System.err.println("We were told to move " + p + " to " + x + " " + y);
         if(!logic.isLegal(p, x, y)) {
             System.err.println("Received illegal move request " + "[who="
                     + player.who() + ", piece=" + p + "].");

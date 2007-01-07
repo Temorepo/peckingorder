@@ -22,65 +22,11 @@ public class PeckingObject extends GameObject implements TurnGameObject,
     public static final String PIECES = "pieces";
     // AUTO-GENERATED: FIELDS END
 
-    public static class Piece implements DSet.Entry
-    {
-
-        /**
-         * Creates an unowned, unranked piece positioned off the board
-         */
-        public Piece()
-        {}
-
-        /**
-         * Creates a piece owned by owner of rank rank positioned off the board
-         */
-        public Piece(int owner, int rank)
-        {
-            this(owner, rank, OFF_BOARD, OFF_BOARD);
-        }
-
-        /**
-         * Creates a piece owned by owner of rank rank positioned at x y
-         */
-        public Piece(int owner, int rank, int x, int y)
-        {
-            this.owner = owner;
-            this.rank = rank;
-            this.x = x;
-            this.y = y;
-        }
-
-        /*
-         * The player that owns the piece. Either RED or BLUE.
-         */
-        public int owner;
-
-        public int x = OFF_BOARD, y = OFF_BOARD;
-
-        public int id;
-
-        /*
-         * The strength of a piece in a fight, starting with 1. The lower the
-         * value, the stronger the piece. Some ranks have special meanings as
-         * indicated in PeckingConstants.
-         */
-        public int rank = UNKNOWN;
-
-        public Comparable getKey()
-        {
-            return id;
-        }
-        
-        public String toString(){
-            return "Piece " + id + " " + x + ", " + y;
-        }
-    }
-
     /**
      * Puts the piece of index newOccupentIdx at the position of the piece of
      * currentOccupantIdx and moves currentOccupantIdx off the board
      */
-    public void replace(Piece currentOccupant, Piece newOccupant)
+    public void replace(PeckingPiece currentOccupant, PeckingPiece newOccupant)
     {
         move(newOccupant, currentOccupant.x, currentOccupant.y);
         removeFromBoard(currentOccupant);
@@ -89,7 +35,7 @@ public class PeckingObject extends GameObject implements TurnGameObject,
     /**
      * Moves the piece p off the board
      */
-    public void removeFromBoard(Piece p)
+    public void removeFromBoard(PeckingPiece p)
     {
        move(p, OFF_BOARD, OFF_BOARD);
     }
@@ -97,10 +43,10 @@ public class PeckingObject extends GameObject implements TurnGameObject,
     /**
      * Moves the piece p to position x, y which should be free
      */
-    public void move(Piece p, int x, int y)
+    public void move(PeckingPiece p, int x, int y)
     {
         System.err.println("Moving " + p + " to " + x + "," + y);
-        Piece newPiece = new Piece(p.owner, p.rank, x, y);
+        PeckingPiece newPiece = new PeckingPiece(p.owner, p.rank, x, y);
         newPiece.id = p.id;
         updatePieces(newPiece);
     }
@@ -127,7 +73,7 @@ public class PeckingObject extends GameObject implements TurnGameObject,
     public Name turnHolder;
 
     /** Contains the pieces in the game. */
-    public DSet<Piece> pieces = new DSet<Piece>();
+    public DSet<PeckingPiece> pieces = new DSet<PeckingPiece>();
 
     // AUTO-GENERATED: METHODS START
     /**
@@ -151,7 +97,7 @@ public class PeckingObject extends GameObject implements TurnGameObject,
      * <code>pieces</code> set. The set will not change until the event is
      * actually propagated through the system.
      */
-    public void addToPieces (PeckingObject.Piece elem)
+    public void addToPieces (PeckingPiece elem)
     {
         requestEntryAdd(PIECES, pieces, elem);
     }
@@ -171,7 +117,7 @@ public class PeckingObject extends GameObject implements TurnGameObject,
      * <code>pieces</code> set. The set will not change until the event is
      * actually propagated through the system.
      */
-    public void updatePieces (PeckingObject.Piece elem)
+    public void updatePieces (PeckingPiece elem)
     {
         requestEntryUpdate(PIECES, pieces, elem);
     }
@@ -186,10 +132,10 @@ public class PeckingObject extends GameObject implements TurnGameObject,
      * change. Proxied copies of this object (on clients) will apply the
      * value change when they received the attribute changed notification.
      */
-    public void setPieces (DSet<org.sevorg.pecking.PeckingObject.Piece> value)
+    public void setPieces (DSet<org.sevorg.pecking.PeckingPiece> value)
     {
         requestAttributeChange(PIECES, value, this.pieces);
-        @SuppressWarnings("unchecked") DSet<org.sevorg.pecking.PeckingObject.Piece> clone =
+        @SuppressWarnings("unchecked") DSet<org.sevorg.pecking.PeckingPiece> clone =
             (value == null) ? null : value.typedClone();
         this.pieces = clone;
     }

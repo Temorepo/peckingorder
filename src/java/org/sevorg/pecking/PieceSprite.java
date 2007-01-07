@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
-import org.sevorg.pecking.PeckingObject.Piece;
 import com.threerings.media.sprite.Sprite;
 
 public class PieceSprite extends Sprite
@@ -16,7 +15,7 @@ public class PieceSprite extends Sprite
     /**
      * Creates a piece sprite to display the supplied game piece.
      */
-    public PieceSprite(PeckingObject.Piece piece)
+    public PieceSprite(PeckingPiece piece)
     {
         super(SIZE, SIZE);
         update(piece);
@@ -26,7 +25,7 @@ public class PieceSprite extends Sprite
      * Called when the piece we are displaying has been updated.
      * @param piece 
      */
-    public void update(Piece piece)
+    public void update(PeckingPiece piece)
     {
         this._piece = piece;
         // set our location based on the location of the piece
@@ -67,5 +66,5 @@ public class PieceSprite extends Sprite
         gfx.drawString(name, _bounds.x + 20, _bounds.y + 48);
     }
 
-    protected PeckingObject.Piece _piece;
+    protected PeckingPiece _piece;
 }

@@ -3,18 +3,54 @@ package org.sevorg.pecking;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
-import org.sevorg.pecking.PeckingObject.Piece;
 import com.threerings.presents.dobj.DSet;
 
 public class PeckingLogic implements PeckingConstants
 {
 
-    public PeckingLogic(DSet<Piece> pieces)
+    public PeckingLogic(DSet<PeckingPiece> pieces)
     {
         this._pieces = pieces;
     }
 
-    public List<Point> getLegalMoves(Piece p)
+    public boolean isWinner(int owner)
+    {
+        int other = owner == RED ? BLUE : RED;
+        // A player is a winner if his opponents worm is off the board or
+        // either he can move, or both he and his opponent can't move which is a
+        // draw
+        return !isWormOffBoard(owner)
+                && (isWormOffBoard(other) || hasLegalMoves(owner) || !hasLegalMoves(other));
+    }
+
+    public boolean shouldEndGame()
+    {
+        return isWormOffBoard(RED) || isWormOffBoard(BLUE)
+                || !hasLegalMoves(RED) || !hasLegalMoves(BLUE);
+    }
+
+    public boolean isWormOffBoard(int owner)
+    {
+        for(PeckingPiece p : _pieces) {
+            if(p.rank == WORM && p.owner == owner
+                    && PeckingLogic.isOffBoard(p.x, p.y)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean hasLegalMoves(int owner)
+    {
+        for(PeckingPiece p : _pieces) {
+            if(p.owner == owner && getLegalMoves(p).size() > 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public List<Point> getLegalMoves(PeckingPiece p)
     {
         List<Point> points = new ArrayList<Point>();
         if(isImmobile(p)) {
@@ -42,9 +78,9 @@ public class PeckingLogic implements PeckingConstants
         return points;
     }
 
-    public Piece getPieceAt(int x, int y)
+    public PeckingPiece getPieceAt(int x, int y)
     {
-        for(Piece p : _pieces) {
+        for(PeckingPiece p : _pieces) {
             if(p.x == x && p.y == y) {
                 return p;
             }
@@ -52,7 +88,7 @@ public class PeckingLogic implements PeckingConstants
         return null;
     }
 
-    private boolean addIfLegalAndCanContinue(Piece pie,
+    private boolean addIfLegalAndCanContinue(PeckingPiece pie,
                                              int x,
                                              int y,
                                              List<Point> points)
@@ -65,23 +101,23 @@ public class PeckingLogic implements PeckingConstants
         return getPieceAt(x, y) == null;
     }
 
-    public boolean isLegal(Piece piece, int x, int y)
+    public boolean isLegal(PeckingPiece piece, int x, int y)
     {
         if(isOffBoard(x, y) || isInLake(x, y) || isImmobile(piece)) {
             return false;
         }
-        Piece other = getPieceAt(x, y);
+        PeckingPiece other = getPieceAt(x, y);
         return other == null || other.owner != piece.owner;
     }
 
-    private boolean isImmobile(Piece piece)
+    private boolean isImmobile(PeckingPiece piece)
     {
         return piece.rank == WORM || piece.rank == CAGE;
     }
 
-    public void move(Piece src, int x, int y, PeckingObject _gameobj)
+    public void move(PeckingPiece src, int x, int y, PeckingObject _gameobj)
     {
-        Piece dest = getPieceAt(x, y);
+        PeckingPiece dest = getPieceAt(x, y);
         if(dest == null) {
             // Simplest case, we're moving to an empty dest
             _gameobj.move(src, x, y);
@@ -114,5 +150,5 @@ public class PeckingLogic implements PeckingConstants
         return x >= 10 || x < 0 || y >= 10 || y < 0;
     }
 
-    private DSet<Piece> _pieces;
+    private DSet<PeckingPiece> _pieces;
 }
