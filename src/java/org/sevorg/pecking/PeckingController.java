@@ -1,7 +1,6 @@
 package org.sevorg.pecking;
 
 import java.awt.Point;
-import org.sevorg.pecking.PeckingObject.Piece;
 import com.threerings.crowd.client.PlaceView;
 import com.threerings.crowd.data.PlaceObject;
 import com.threerings.crowd.util.CrowdContext;
@@ -29,6 +28,8 @@ public class PeckingController extends GameController
         super.willEnterPlace(plobj);
         // get a casted reference to our game object
         _gameobj = (PeckingObject)plobj;
+        // determine our piece color (-1 if we're not a player)
+        _color = _gameobj.getPlayerIndex(((ToyBoxContext)_ctx).getUsername());
     }
 
     @Override
@@ -66,9 +67,10 @@ public class PeckingController extends GameController
         // end of a game
     }
 
-    public void move(Piece pieceAt, Point p)
+    public void move(int idx, Point p)
     {
-        //TODO
+        // tell the server we want to place our piece here
+        _gameobj.manager.invoke("movePiece", idx, p.x, p.y);
     }
 
     /** Our game panel. */
@@ -76,4 +78,6 @@ public class PeckingController extends GameController
 
     /** Our game distributed object. */
     protected PeckingObject _gameobj;
+    
+    protected int _color;
 }

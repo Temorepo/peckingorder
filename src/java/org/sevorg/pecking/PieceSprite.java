@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import org.sevorg.pecking.PeckingObject.Piece;
 import com.threerings.media.sprite.Sprite;
 
 public class PieceSprite extends Sprite
@@ -18,15 +19,16 @@ public class PieceSprite extends Sprite
     public PieceSprite(PeckingObject.Piece piece)
     {
         super(SIZE, SIZE);
-        this._piece = piece;
-        update();
+        update(piece);
     }
 
     /**
      * Called when the piece we are displaying has been updated.
+     * @param piece 
      */
-    public void update()
+    public void update(Piece piece)
     {
+        this._piece = piece;
         // set our location based on the location of the piece
         setLocation(_piece.x * SIZE, _piece.y * SIZE);
         // force a redraw in case our rank or type changed but not our location

@@ -1,15 +1,26 @@
 package org.sevorg.pecking;
 
+import java.awt.Point;
 import org.sevorg.pecking.PeckingObject.Piece;
+import com.threerings.crowd.data.BodyObject;
 import com.threerings.crowd.data.PlaceObject;
 import com.threerings.parlor.game.server.GameManager;
+import com.threerings.parlor.turn.server.TurnGameManager;
+import com.threerings.parlor.turn.server.TurnGameManagerDelegate;
 import com.threerings.toybox.data.ToyBoxGameConfig;
 
 /**
  * Handles the server side of the game.
  */
-public class PeckingManager extends GameManager implements PeckingConstants
+public class PeckingManager extends GameManager implements PeckingConstants,
+        TurnGameManager
 {
+
+    public PeckingManager()
+    {
+        // we're a turn based game, so we use a turn game manager delegate
+        addDelegate(_turndel = new TurnGameManagerDelegate(this));
+    }
 
     @Override
     // from PlaceManager
@@ -88,9 +99,49 @@ public class PeckingManager extends GameManager implements PeckingConstants
         // including calling this method
     }
 
+    public void turnDidEnd()
+    {
+        //TODO - Check for game over
+    }
+
+    public void turnDidStart()
+    {
+        
+    }
+
+    public void turnWillStart()
+    {
+        
+    }
+
+    public void movePiece(BodyObject player, int idx, int x, int y)
+    {
+        // make sure it's this player's turn
+        int pidx = _turndel.getTurnHolderIndex();
+        if(_playerOids[pidx] != player.getOid()) {
+            System.err.println("Requested to place piece by non-turn holder "
+                    + "[who=" + player.who() + ", turnHolder="
+                    + _gameobj.turnHolder + "].");
+            return;
+        }
+        PeckingLogic logic = new PeckingLogic(_gameobj.pieces);
+        System.err.println("We were told to move "+ idx + " to " + x + " " + y);
+        
+        if(!logic.isLegal(_gameobj.pieces[idx], new Point(x, y))) {
+            System.err.println("Received illegal move request " + "[who="
+                    + player.who() + ", piece=" + _gameobj.pieces[idx] + "].");
+            return;
+        }
+        logic.move(idx, x, y, _gameobj);
+        _turndel.endTurn();
+    }
+
     /** Our game object. */
     protected PeckingObject _gameobj;
 
     /** Our game configuration. */
     protected ToyBoxGameConfig _gameconf;
+
+    /** Handles our turn based game flow. */
+    protected TurnGameManagerDelegate _turndel;
 }

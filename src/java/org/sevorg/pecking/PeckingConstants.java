@@ -32,14 +32,16 @@ public interface PeckingConstants
                                                          6,
                                                          1};
 
-    // Ranks with special abilities. The ranks 1-7 just indicate their strength
+    // Ranks with special abilities. The ranks 2-7 just indicate their strength
+    public static final int MARSHALL = 1;
+    
     public static final int CAGE_OPENER = 8;
 
     public static final int SCOUT = 9;
 
     public static final int ASSASSIN = 10;
     
-    //Ranks that can't move
+    //Immobile ranks
     public static final int CAGE = 11;
 
     public static final int WORM = 12;
