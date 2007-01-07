@@ -1,7 +1,8 @@
 //
 // $Id$
-package org.sevorg.pecking;
+package org.sevorg.pecking.data;
 
+import org.sevorg.pecking.PeckingConstants;
 import com.threerings.parlor.game.data.GameObject;
 import com.threerings.parlor.turn.data.TurnGameObject;
 import com.threerings.presents.dobj.DSet;
@@ -132,10 +133,10 @@ public class PeckingObject extends GameObject implements TurnGameObject,
      * change. Proxied copies of this object (on clients) will apply the
      * value change when they received the attribute changed notification.
      */
-    public void setPieces (DSet<org.sevorg.pecking.PeckingPiece> value)
+    public void setPieces (DSet<org.sevorg.pecking.data.PeckingPiece> value)
     {
         requestAttributeChange(PIECES, value, this.pieces);
-        @SuppressWarnings("unchecked") DSet<org.sevorg.pecking.PeckingPiece> clone =
+        @SuppressWarnings("unchecked") DSet<org.sevorg.pecking.data.PeckingPiece> clone =
             (value == null) ? null : value.typedClone();
         this.pieces = clone;
     }

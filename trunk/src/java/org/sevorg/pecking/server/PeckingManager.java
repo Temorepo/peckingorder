@@ -1,5 +1,10 @@
-package org.sevorg.pecking;
+package org.sevorg.pecking.server;
 
+import org.sevorg.pecking.PeckingConstants;
+import org.sevorg.pecking.PeckingLogic;
+import org.sevorg.pecking.client.PeckingBoardViewTest;
+import org.sevorg.pecking.data.PeckingObject;
+import org.sevorg.pecking.data.PeckingPiece;
 import com.threerings.crowd.data.BodyObject;
 import com.threerings.crowd.data.PlaceObject;
 import com.threerings.parlor.game.server.GameManager;

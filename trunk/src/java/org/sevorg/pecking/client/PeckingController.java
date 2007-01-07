@@ -1,5 +1,7 @@
-package org.sevorg.pecking;
+package org.sevorg.pecking.client;
 
+import org.sevorg.pecking.data.PeckingObject;
+import org.sevorg.pecking.data.PeckingPiece;
 import com.threerings.crowd.client.PlaceView;
 import com.threerings.crowd.data.PlaceObject;
 import com.threerings.crowd.util.CrowdContext;

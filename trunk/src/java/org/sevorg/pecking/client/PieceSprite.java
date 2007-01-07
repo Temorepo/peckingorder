@@ -1,9 +1,11 @@
-package org.sevorg.pecking;
+package org.sevorg.pecking.client;
 
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import org.sevorg.pecking.PeckingConstants;
+import org.sevorg.pecking.data.PeckingPiece;
 import com.threerings.media.sprite.Sprite;
 
 public class PieceSprite extends Sprite
