@@ -122,7 +122,7 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
             }
         } else {
             if(!sprites.containsKey(piece.id)) {
-                PieceSprite sprite = new PieceSprite(piece);
+                BoardPieceSprite sprite = new BoardPieceSprite(piece);
                 sprites.put(piece.id, sprite);
                 addSprite(sprite);
             } else {
@@ -202,7 +202,7 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
 
     private List<Point> possibleMoves;
 
-    private Map<Comparable, PieceSprite> sprites = new HashMap<Comparable, PieceSprite>();
+    private Map<Comparable, BoardPieceSprite> sprites = new HashMap<Comparable, BoardPieceSprite>();
 
     private Dimension boardSize = new Dimension(10, 10);
 

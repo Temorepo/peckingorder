@@ -8,36 +8,24 @@ import org.sevorg.pecking.PeckingConstants;
 import org.sevorg.pecking.data.PeckingPiece;
 import com.threerings.media.sprite.Sprite;
 
-public class PieceSprite extends Sprite implements PeckingConstants
+public abstract class PieceSprite extends Sprite implements PeckingConstants
 {
+
+    public PieceSprite()
+    {
+        super(SIZE, SIZE);
+    }
 
     /** The dimensions of our sprite in pixels. */
     public static final int SIZE = 64;
 
     /**
-     * Creates a piece sprite to display the supplied game piece.
-     */
-    public PieceSprite(PeckingPiece piece)
-    {
-        super(SIZE, SIZE);
-        update(piece);
-    }
-
-    /**
      * Called when the piece we are displaying has been updated.
      * @param piece 
      */
-    public void update(PeckingPiece piece)
-    {
-        this._piece = piece;
-        // set our location based on the location of the piece
-        setLocation(_piece.x * SIZE, _piece.y * SIZE);
-        // force a redraw in case our rank or type changed but not our location
-        invalidate();
-    }
+    public abstract void update(PeckingPiece piece);
 
     @Override
-    // from Sprite
     public void paint(Graphics2D gfx)
     {
         gfx.setRenderingHint(RenderingHints.KEY_ANTIALIASING,

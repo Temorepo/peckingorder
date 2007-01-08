@@ -51,6 +51,11 @@ public interface PeckingConstants
     public static final int MARSHALL = 1;
 
     /**
+     * Second highest rank.  Shares a row in the pieces bin with the marshall.
+     */
+    public static final int GENERAL = 2;
+
+    /**
      * Rank that can open cages.
      */
     public static final int CAGE_OPENER = 8;
