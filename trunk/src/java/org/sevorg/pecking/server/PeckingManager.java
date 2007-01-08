@@ -171,12 +171,13 @@ public class PeckingManager extends GameManager implements PeckingConstants,
         }
         PeckingLogic logic = new PeckingLogic(localPieces.pieces);
         System.err.println("We were told to move " + p + " to " + x + " " + y);
-        if(!logic.isLegal(p, x, y)) {
+        PeckingPiece[] movedPieces = logic.move(p, x, y);
+        if(movedPieces.length == 0) {
             System.err.println("Received illegal move request " + "[who="
                     + player.who() + ", piece=" + p + "].");
             return;
         }
-        for(PeckingPiece movedPiece : logic.move(p, x, y)) {
+        for(PeckingPiece movedPiece : movedPieces) {
             if(movedPiece.owner == RED || movedPiece.revealed) {
                 redPieces.updatePieces(movedPiece);
             } else {
