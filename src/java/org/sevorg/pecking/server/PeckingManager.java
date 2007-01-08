@@ -1,18 +1,21 @@
 package org.sevorg.pecking.server;
 
-import java.util.HashSet;
-import java.util.Random;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 import org.sevorg.pecking.PeckingConstants;
 import org.sevorg.pecking.PeckingLogic;
 import org.sevorg.pecking.client.PeckingBoardViewTest;
 import org.sevorg.pecking.data.PeckingObject;
 import org.sevorg.pecking.data.PeckingPiece;
+import org.sevorg.pecking.data.PeckingPiecesObject;
+import com.samskivert.util.RandomUtil;
 import com.threerings.crowd.data.BodyObject;
 import com.threerings.crowd.data.PlaceObject;
 import com.threerings.parlor.game.server.GameManager;
 import com.threerings.parlor.turn.server.TurnGameManager;
 import com.threerings.parlor.turn.server.TurnGameManagerDelegate;
+import com.threerings.presents.data.ClientObject;
+import com.threerings.presents.server.PresentsServer;
 import com.threerings.toybox.data.ToyBoxGameConfig;
 
 /**
@@ -77,35 +80,47 @@ public class PeckingManager extends GameManager implements PeckingConstants,
         // this is the place to do any pre-game setup that needs to be done
         // each time a game is started rather than just once at the very
         // beginning (those sorts of things should be done in didStartup())
-        PeckingPiece[] pieces = PeckingBoardViewTest.createPieces()
+        PeckingPiece[] defaultPieces = PeckingBoardViewTest.createPieces()
                 .toArray(new PeckingPiece[0]);
-        Set used = new HashSet();
-        Random r = new Random();
+        PresentsServer.omgr.registerObject(localPieces);
+        setPieces(BLUE, bluePieces);
+        setPieces(RED, redPieces);
+        List<Integer> unused = new ArrayList<Integer>(80);
+        for(int i = 0; i < defaultPieces.length; i++) {
+            unused.add(i);
+        }
         int redCount = 0, blueCount = 0;
-        for(int i = 0; i < pieces.length; i++) {
-            if(pieces[i].owner == RED) {
-                pieces[i].x = redCount % 10;
-                pieces[i].y = redCount / 10;
-                redCount++;
+        for(int i = 0; i < defaultPieces.length; i++) {
+            if(defaultPieces[i].owner == RED) {
+                defaultPieces[i].x = redCount % 10;
+                defaultPieces[i].y = redCount++ / 10;
             } else {
-                pieces[i].x = blueCount % 10;
-                pieces[i].y = 9 - blueCount / 10;
-                blueCount++;
+                defaultPieces[i].x = blueCount % 10;
+                defaultPieces[i].y = 9 - blueCount++ / 10;
             }
             // Give each piece a distinct, random id
             // The id can't just be the array index(or any other constant
             // assignment) as that would allow a cheating client to figure out
             // the rank of a piece given its id
-            int perhapsId;
-            do {
-                perhapsId = r.nextInt();
-            } while(used.contains(perhapsId));
-            used.add(perhapsId);
-            pieces[i].id = perhapsId;
-            _gameobj.addToPieces(pieces[i]);
+            defaultPieces[i].id = unused.remove(RandomUtil.getInt(unused.size()));
+            localPieces.addToPieces(defaultPieces[i]);
+            if(defaultPieces[i].owner == RED) {
+                redPieces.addToPieces(defaultPieces[i]);
+                bluePieces.addToPieces(defaultPieces[i].copyWithoutRank());
+            } else {
+                bluePieces.addToPieces(defaultPieces[i]);
+                redPieces.addToPieces(defaultPieces[i].copyWithoutRank());
+            }
         }
     }
 
+    private void setPieces(int player, PeckingPiecesObject pieces)
+    {
+        PresentsServer.omgr.registerObject(pieces);
+        ClientObject clobj = (ClientObject)PresentsServer.omgr.getObject(_playerOids[player]);
+        PeckingSender.setPeckingPiecesObjectOid(clobj, pieces.getOid());
+    }
+    
     @Override
     // from GameManager
     protected void gameDidEnd()
@@ -122,7 +137,7 @@ public class PeckingManager extends GameManager implements PeckingConstants,
     protected void assignWinners(boolean[] winners)
     {
         super.assignWinners(winners);
-        PeckingLogic logic = new PeckingLogic(_gameobj.pieces);
+        PeckingLogic logic = new PeckingLogic(localPieces.pieces);
         // A player is a winner if his opponents worm is off the board and
         // either he can move, or both he and his opponent can't move which is a
         // draw
@@ -132,7 +147,7 @@ public class PeckingManager extends GameManager implements PeckingConstants,
 
     public void turnDidEnd()
     {
-        if(new PeckingLogic(_gameobj.pieces).shouldEndGame()) {
+        if(new PeckingLogic(localPieces.pieces).shouldEndGame()) {
             endGame();
         }
     }
@@ -143,8 +158,9 @@ public class PeckingManager extends GameManager implements PeckingConstants,
     public void turnWillStart()
     {}
 
-    public void movePiece(BodyObject player, PeckingPiece p, int x, int y)
+    public void movePiece(BodyObject player, int pieceId, int x, int y)
     {
+        PeckingPiece p = localPieces.pieces.get(pieceId);
         // make sure it's this player's turn
         int pidx = _turndel.getTurnHolderIndex();
         if(_playerOids[pidx] != player.getOid()) {
@@ -153,16 +169,33 @@ public class PeckingManager extends GameManager implements PeckingConstants,
                     + _gameobj.turnHolder + "].");
             return;
         }
-        PeckingLogic logic = new PeckingLogic(_gameobj.pieces);
+        PeckingLogic logic = new PeckingLogic(localPieces.pieces);
         System.err.println("We were told to move " + p + " to " + x + " " + y);
         if(!logic.isLegal(p, x, y)) {
             System.err.println("Received illegal move request " + "[who="
                     + player.who() + ", piece=" + p + "].");
             return;
         }
-        logic.move(p, x, y, _gameobj);
+        for(PeckingPiece movedPiece : logic.move(p, x, y)) {
+            if(movedPiece.owner == RED || movedPiece.revealed) {
+                redPieces.updatePieces(movedPiece);
+            } else {
+                redPieces.updatePieces(movedPiece.copyWithoutRank());
+            }
+            if(movedPiece.owner == BLUE || movedPiece.revealed) {
+                
+                bluePieces.updatePieces(movedPiece);
+            } else {
+                bluePieces.updatePieces(movedPiece.copyWithoutRank());
+            }
+        }
         _turndel.endTurn();
     }
+
+    private PeckingPiecesObject redPieces = new PeckingPiecesObject(),
+            bluePieces = new PeckingPiecesObject(),
+            localPieces = new PeckingPiecesObject();
+
 
     /** Our game object. */
     protected PeckingObject _gameobj;

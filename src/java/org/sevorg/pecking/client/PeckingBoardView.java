@@ -16,6 +16,7 @@ import org.sevorg.pecking.PeckingConstants;
 import org.sevorg.pecking.PeckingLogic;
 import org.sevorg.pecking.data.PeckingObject;
 import org.sevorg.pecking.data.PeckingPiece;
+import org.sevorg.pecking.data.PeckingPiecesObject;
 import com.threerings.crowd.client.PlaceView;
 import com.threerings.crowd.data.PlaceObject;
 import com.threerings.media.VirtualMediaPanel;
@@ -47,7 +48,7 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
                         || PeckingLogic.isOffBoard(clickX, clickY)) {
                     return;
                 }
-                PeckingLogic logic = new PeckingLogic(_gameobj.pieces);
+                PeckingLogic logic = new PeckingLogic(_pobj.pieces);
                 if(possibleMoves != null) {
                     Point click = new Point(clickX, clickY);
                     for(Point p : possibleMoves) {
@@ -73,8 +74,13 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
     public void willEnterPlace(PlaceObject plobj)
     {
         _gameobj = (PeckingObject)plobj;
-        _gameobj.addListener(this);
-        for(PeckingPiece p: _gameobj.pieces) {
+    }
+
+    public void setPieceObject(PeckingPiecesObject pobj)
+    {
+        _pobj = pobj;
+        pobj.addListener(this);
+        for(PeckingPiece p : pobj.pieces) {
             pieceUpdated(p);
         }
     }
@@ -95,7 +101,8 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
 
     public void entryAdded(EntryAddedEvent event)
     {
-        if(event.getName().equals(PeckingObject.PIECES)) {
+        System.out.println("SOMEONE ADDED " + event.getEntry());
+        if(event.getName().equals(PeckingPiecesObject.PIECES)) {
             pieceUpdated((PeckingPiece)event.getEntry());
         }
     }
@@ -107,7 +114,8 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
 
     public void entryUpdated(EntryUpdatedEvent event)
     {
-        if(event.getName().equals(PeckingObject.PIECES)) {
+        System.out.println("SOMEONE UPDATED " + event.getEntry());
+        if(event.getName().equals(PeckingPiecesObject.PIECES)) {
             pieceUpdated((PeckingPiece)event.getEntry());
         }
     }
@@ -118,11 +126,11 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
             clearSelectedPiece();
         }
         if(piece.x == OFF_BOARD) {
-            if(sprites.containsKey(piece.id)){
+            if(sprites.containsKey(piece.id)) {
                 removeSprite(sprites.get(piece.id));
                 sprites.remove(piece.id);
             }
-        }else{
+        } else {
             if(!sprites.containsKey(piece.id)) {
                 PieceSprite sprite = new PieceSprite(piece);
                 sprites.put(piece.id, sprite);
@@ -195,6 +203,8 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
 
     /** A reference to our game object. */
     protected PeckingObject _gameobj;
+
+    protected PeckingPiecesObject _pobj;
 
     private PeckingController _ctr;
 

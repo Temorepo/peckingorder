@@ -27,6 +27,22 @@
       <fileset dir="${src.dir}" includes="**/*Object.java"/>
     </dobj>
   </target>
+  <target name="genrecv" depends="prepare">
+<taskdef name="recv"
+         classname="com.threerings.presents.tools.GenReceiverTask"
+         classpathref="classpath"/>
+<!-- make sure the dobject class files are all compiled -->
+<javac srcdir="${src.dir}" destdir="${deploy.dir}/classes"
+       debug="on" optimize="${build.optimize}" deprecation="on">
+  <classpath refid="classpath"/>
+  <include name="**/*Receiver.java"/>
+</javac>
+<!-- now generate the associated files -->
+<recv classpathref="classpath">
+  <fileset dir="${src.dir}" includes="**/*Receiver.java"/>
+</recv>
+</target>
+
 
   <!-- prepares the application directories -->
   <target name="prepare">
