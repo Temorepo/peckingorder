@@ -91,6 +91,7 @@ public class PeckingManager extends GameManager implements PeckingConstants,
         }
         int redCount = 0, blueCount = 0;
         for(int i = 0; i < defaultPieces.length; i++) {
+            defaultPieces[i].revealed = false;
             if(defaultPieces[i].owner == RED) {
                 defaultPieces[i].x = redCount % 10;
                 defaultPieces[i].y = redCount++ / 10;
@@ -170,7 +171,6 @@ public class PeckingManager extends GameManager implements PeckingConstants,
             return;
         }
         PeckingLogic logic = new PeckingLogic(localPieces.pieces);
-        System.err.println("We were told to move " + p + " to " + x + " " + y);
         PeckingPiece[] movedPieces = logic.move(p, x, y);
         if(movedPieces.length == 0) {
             System.err.println("Received illegal move request " + "[who="
@@ -184,11 +184,11 @@ public class PeckingManager extends GameManager implements PeckingConstants,
                 redPieces.updatePieces(movedPiece.copyWithoutRank());
             }
             if(movedPiece.owner == BLUE || movedPiece.revealed) {
-                
                 bluePieces.updatePieces(movedPiece);
             } else {
                 bluePieces.updatePieces(movedPiece.copyWithoutRank());
             }
+            localPieces.updatePieces(movedPiece);
         }
         _turndel.endTurn();
     }

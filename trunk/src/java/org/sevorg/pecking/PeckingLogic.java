@@ -133,12 +133,13 @@ public class PeckingLogic implements PeckingConstants
             // Simplest case, we're moving to an empty dest
             return new PeckingPiece[] {src.copyWithNewPosition(x, y)};
         }
-        src.revealed = true;
-        dest.revealed = true;
         if(dest.rank == CAGE) {
             if(src.rank == CAGE_OPENER) {
                 return replace(dest, src);
             } else {
+                if(!dest.revealed){
+                    return new PeckingPiece[] {src.copyOffBoard(), dest.copyRevealed()};
+                }
                 return new PeckingPiece[] {src.copyOffBoard()};
             }
         } else if((src.rank == ASSASSIN && dest.rank == MARSHALL)
@@ -147,6 +148,9 @@ public class PeckingLogic implements PeckingConstants
         } else if(src.rank == dest.rank) {
             return new PeckingPiece[] {src.copyOffBoard(), dest.copyOffBoard()};
         } else {
+            if(!dest.revealed){
+                return new PeckingPiece[] {src.copyOffBoard(), dest.copyRevealed()};
+            }
             return new PeckingPiece[] {src.copyOffBoard()};
         }
     }
@@ -158,7 +162,7 @@ public class PeckingLogic implements PeckingConstants
     private PeckingPiece[] replace(PeckingPiece dest, PeckingPiece src)
     {
         return new PeckingPiece[] {dest.copyOffBoard(),
-                                   src.copyWithNewPosition(dest.x, dest.y)};
+                                   src.copyWithNewPosition(dest.x, dest.y, true)};
     }
 
     public static boolean isInLake(int x, int y)
