@@ -1,5 +1,8 @@
 package org.sevorg.pecking.client;
 
+import java.util.HashSet;
+import java.util.Set;
+import org.sevorg.pecking.PeckingLogic;
 import org.sevorg.pecking.data.PeckingObject;
 import org.sevorg.pecking.data.PeckingPiece;
 import org.sevorg.pecking.data.PeckingPiecesObject;
@@ -8,7 +11,9 @@ import com.threerings.crowd.data.PlaceObject;
 import com.threerings.crowd.util.CrowdContext;
 import com.threerings.parlor.card.Log;
 import com.threerings.parlor.game.client.GameController;
+import com.threerings.presents.dobj.EntryAddedEvent;
 import com.threerings.presents.dobj.ObjectAccessException;
+import com.threerings.presents.dobj.SetListener;
 import com.threerings.presents.dobj.Subscriber;
 import com.threerings.toybox.util.ToyBoxContext;
 
@@ -52,6 +57,7 @@ public class PeckingController extends GameController implements
         super.didLeavePlace(plobj);
         // clear out our game object reference
         _gameobj = null;
+        clearPieces();
     }
 
     @Override
@@ -78,6 +84,18 @@ public class PeckingController extends GameController implements
         super.gameDidEnd();
         // here we can clear out anything that needs to be cleared out at the
         // end of a game
+        clearPieces();
+    }
+
+    private void clearPieces()
+    {
+        if(_pieces != null) {
+            for(SetListener listener : peckingPiecesListeners) {
+                _pieces.removeListener(listener);
+            }
+            _pieces.removeSubscriber(this);
+            _pieces = null;
+        }
     }
 
     public void setPeckingPiecesObjectOid(int oid)
@@ -93,7 +111,42 @@ public class PeckingController extends GameController implements
     public void objectAvailable(PeckingPiecesObject object)
     {
         _pieces = object;
-        _panel._bview.setPieceObject(object);
+        for(SetListener listener : peckingPiecesListeners) {
+            object.addListener(listener);
+            addAllPiecesToListener(listener);
+        }
+    }
+
+    public PeckingLogic createLogic()
+    {
+        return new PeckingLogic(_pieces.pieces);
+    }
+
+    public void addPeckingPiecesListener(SetListener listener)
+    {
+        peckingPiecesListeners.add(listener);
+        if(_pieces != null){
+            addAllPiecesToListener(listener);
+        }
+    }
+
+    public void removePeckingPiecesListener(SetListener listener)
+    {
+        if(_pieces != null && peckingPiecesListeners.remove(listener)) {
+            _pieces.removeListener(listener);
+        }
+    }
+
+    private void addAllPiecesToListener(SetListener listener)
+    {
+        if(_pieces == null){
+            return;
+        }
+        for(PeckingPiece piece : _pieces.pieces) {
+            listener.entryAdded(new EntryAddedEvent<PeckingPiece>(_pieces.getOid(),
+                                                                  PeckingPiecesObject.PIECES,
+                                                                  piece));
+        }
     }
 
     public void move(PeckingPiece pie, int x, int y)
@@ -101,6 +154,8 @@ public class PeckingController extends GameController implements
         // tell the server we want to place our piece here
         _gameobj.manager.invoke("movePiece", pie.id, x, y);
     }
+
+    private Set<SetListener> peckingPiecesListeners = new HashSet<SetListener>();
 
     /** Our game panel. */
     protected PeckingPanel _panel;
