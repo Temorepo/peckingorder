@@ -10,7 +10,7 @@ public interface PeckingReceiver extends InvocationReceiver
      * can immediately turn around and subscribe to it
      * 
      * TODO - Find a way to send a presubscribed DObject to a client to avoid
-     * this rigamorole
+     * this rigamarole
      */
     public void setPeckingPiecesObjectOid(int peckingPiecesObjOid);
 }
