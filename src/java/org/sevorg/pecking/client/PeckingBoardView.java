@@ -61,7 +61,7 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
                 }
                 clearSelectedPiece();
                 PeckingPiece p = logic.getPieceAt(clickX, clickY);
-                if(p.owner == _ctr._color) {
+                if(p != null && p.owner == _ctr._color) {
                     selectedPiece = p;
                     possibleMoves = logic.getLegalMoves(p);
                     getRegionManager().addDirtyRegion(new Rectangle(getPreferredSize()));
@@ -101,7 +101,6 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
 
     public void entryAdded(EntryAddedEvent event)
     {
-        System.out.println("SOMEONE ADDED " + event.getEntry());
         if(event.getName().equals(PeckingPiecesObject.PIECES)) {
             pieceUpdated((PeckingPiece)event.getEntry());
         }
@@ -114,7 +113,6 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
 
     public void entryUpdated(EntryUpdatedEvent event)
     {
-        System.out.println("SOMEONE UPDATED " + event.getEntry());
         if(event.getName().equals(PeckingPiecesObject.PIECES)) {
             pieceUpdated((PeckingPiece)event.getEntry());
         }

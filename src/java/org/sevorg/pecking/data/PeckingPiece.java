@@ -94,16 +94,41 @@ public class PeckingPiece implements DSet.Entry, PeckingConstants
      */
     public PeckingPiece copyWithoutRank()
     {
-        return new PeckingPiece(owner, UNKNOWN, x, y, id, revealed);
+        return new PeckingPiece(owner, UNKNOWN, x, y, id);
     }
 
+    /**
+     * @return - a copy of this piece with its revealed field set to true
+     */
+    public PeckingPiece copyRevealed()
+    {
+        return copyWithNewPosition(x, y, true);
+    }
+
+    /**
+     * @return - a copy of this piece with x set to newX and y set to newY
+     */
     public PeckingPiece copyWithNewPosition(int newX, int newY)
     {
-        return new PeckingPiece(owner, rank, newX, newY, id, revealed);
+        return copyWithNewPosition(newX, newY, revealed);
     }
 
+    /**
+     * @return - a copy of this piece with x set to newX and y set to newY and
+     *         revealed set to newRevealed
+     */
+    public PeckingPiece copyWithNewPosition(int newX,
+                                            int newY,
+                                            boolean newRevealed)
+    {
+        return new PeckingPiece(owner, rank, newX, newY, id, newRevealed);
+    }
+
+    /**
+     * @return - a copy of this piece with x and y set to OFF_BOARD and revealed set to true
+     */
     public PeckingPiece copyOffBoard()
     {
-        return copyWithNewPosition(OFF_BOARD, OFF_BOARD);
+        return copyWithNewPosition(OFF_BOARD, OFF_BOARD, true);
     }
 }
