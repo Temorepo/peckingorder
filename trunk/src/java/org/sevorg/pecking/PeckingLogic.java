@@ -33,8 +33,7 @@ public class PeckingLogic implements PeckingConstants
     public boolean isWormOffBoard(int owner)
     {
         for(PeckingPiece p : _pieces) {
-            if(p.rank == WORM && p.owner == owner
-                    && PeckingLogic.isOffBoard(p.x, p.y)) {
+            if(p.rank == WORM && p.owner == owner && isOffBoard(p)) {
                 return true;
             }
         }
@@ -137,8 +136,9 @@ public class PeckingLogic implements PeckingConstants
             if(src.rank == CAGE_OPENER) {
                 return replace(dest, src);
             } else {
-                if(!dest.revealed){
-                    return new PeckingPiece[] {src.copyOffBoard(), dest.copyRevealed()};
+                if(!dest.revealed) {
+                    return new PeckingPiece[] {src.copyOffBoard(),
+                                               dest.copyRevealed()};
                 }
                 return new PeckingPiece[] {src.copyOffBoard()};
             }
@@ -148,8 +148,9 @@ public class PeckingLogic implements PeckingConstants
         } else if(src.rank == dest.rank) {
             return new PeckingPiece[] {src.copyOffBoard(), dest.copyOffBoard()};
         } else {
-            if(!dest.revealed){
-                return new PeckingPiece[] {src.copyOffBoard(), dest.copyRevealed()};
+            if(!dest.revealed) {
+                return new PeckingPiece[] {src.copyOffBoard(),
+                                           dest.copyRevealed()};
             }
             return new PeckingPiece[] {src.copyOffBoard()};
         }
@@ -168,6 +169,11 @@ public class PeckingLogic implements PeckingConstants
     public static boolean isInLake(int x, int y)
     {
         return (x == 2 || x == 3 || x == 6 || x == 7) && (y == 4 || y == 5);
+    }
+
+    public static boolean isOffBoard(PeckingPiece p)
+    {
+        return isOffBoard(p.x, p.y);
     }
 
     public static boolean isOffBoard(int x, int y)

@@ -82,6 +82,17 @@ public class PeckingPiece implements DSet.Entry, PeckingConstants
     {
         return id;
     }
+    
+    public int hashCode(){
+        return id;
+    }
+    
+    public boolean equals(Object other){
+        if(other instanceof PeckingPiece){
+            return id == ((PeckingPiece)other).id;
+        }
+        return false;
+    }
 
     public String toString()
     {

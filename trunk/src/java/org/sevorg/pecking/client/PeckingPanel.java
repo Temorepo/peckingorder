@@ -4,19 +4,21 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
 import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import org.sevorg.pecking.PeckingConstants;
 import com.samskivert.swing.GroupLayout;
 import com.threerings.crowd.client.PlacePanel;
-import com.threerings.util.MessageBundle;
 import com.threerings.toybox.client.ChatPanel;
 import com.threerings.toybox.util.ToyBoxContext;
+import com.threerings.util.MessageBundle;
 
 /**
  * Contains the primary client interface for the game.
  */
-public class PeckingPanel extends PlacePanel
+public class PeckingPanel extends PlacePanel implements PeckingConstants
 {
 
     /**
@@ -32,8 +34,11 @@ public class PeckingPanel extends PlacePanel
         setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         setLayout(new BorderLayout());
         // create and add our board view
-        add(_bview = new PeckingBoardView(ctx, ctrl), BorderLayout.CENTER);
-        //TODO - setup logic
+        Box boardAndBins = Box.createHorizontalBox();
+        boardAndBins.add(new PeckingPieceBin(ctx, ctrl, RED));
+        boardAndBins.add(new PeckingBoardView(ctx, ctrl));
+        boardAndBins.add(new PeckingPieceBin(ctx, ctrl, BLUE));
+        add(boardAndBins, BorderLayout.CENTER);
         // create a side panel to hold our chat and other extra interfaces
         JPanel sidePanel = GroupLayout.makeVStretchBox(5);
         // add a big fat label
@@ -54,7 +59,4 @@ public class PeckingPanel extends PlacePanel
 
     /** Provides access to various client services. */
     protected ToyBoxContext _ctx;
-
-    /** The board view. */
-    protected PeckingBoardView _bview;
 }
