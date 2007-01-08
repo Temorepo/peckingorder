@@ -37,7 +37,8 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
     {
         super(ctx.getFrameManager());
         _ctx = ctx;
-        _ctr = ctrl;
+        _ctrl = ctrl;
+        _ctrl.addPeckingPiecesListener(this);
         addMouseListener(new MouseAdapter() {
 
             public void mousePressed(MouseEvent e)
@@ -48,20 +49,20 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
                         || PeckingLogic.isOffBoard(clickX, clickY)) {
                     return;
                 }
-                PeckingLogic logic = new PeckingLogic(_pobj.pieces);
                 if(possibleMoves != null) {
                     Point click = new Point(clickX, clickY);
                     for(Point p : possibleMoves) {
                         if(click.equals(p)) {
-                            _ctr.move(selectedPiece, p.x, p.y);
+                            _ctrl.move(selectedPiece, p.x, p.y);
                             getRegionManager().addDirtyRegion(new Rectangle(getPreferredSize()));
                             return;
                         }
                     }
                 }
                 clearSelectedPiece();
+                PeckingLogic logic = _ctrl.createLogic();
                 PeckingPiece p = logic.getPieceAt(clickX, clickY);
-                if(p != null && p.owner == _ctr._color) {
+                if(p != null && p.owner == _ctrl._color) {
                     selectedPiece = p;
                     possibleMoves = logic.getLegalMoves(p);
                     getRegionManager().addDirtyRegion(new Rectangle(getPreferredSize()));
@@ -74,15 +75,6 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
     public void willEnterPlace(PlaceObject plobj)
     {
         _gameobj = (PeckingObject)plobj;
-    }
-
-    public void setPieceObject(PeckingPiecesObject pobj)
-    {
-        _pobj = pobj;
-        pobj.addListener(this);
-        for(PeckingPiece p : pobj.pieces) {
-            pieceUpdated(p);
-        }
     }
 
     // from interface PlaceView
@@ -204,7 +196,7 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
 
     protected PeckingPiecesObject _pobj;
 
-    private PeckingController _ctr;
+    private PeckingController _ctrl;
 
     private PeckingPiece selectedPiece;
 
