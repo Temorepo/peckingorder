@@ -10,7 +10,9 @@ public class PeckingPiece implements DSet.Entry, PeckingConstants
      * Creates an unowned, unranked piece positioned off the board
      */
     public PeckingPiece()
-    {}
+    {
+        this(UNKNOWN, UNKNOWN);
+    }
 
     /**
      * Creates a piece owned by owner of rank rank positioned off the board
@@ -37,7 +39,7 @@ public class PeckingPiece implements DSet.Entry, PeckingConstants
     }
 
     /**
-     * Creates a piece owned by owner of rank rank positioned at x y
+     * Creates a piece with the given attributes
      */
     public PeckingPiece(int owner,
                         int rank,
@@ -54,8 +56,8 @@ public class PeckingPiece implements DSet.Entry, PeckingConstants
         this.revealed = revealed;
     }
 
-    /*
-     * The player that owns the piece. Either RED or BLUE.
+    /**
+     * The player that owns the piece. Either RED, BLUE or UNKNOWN.
      */
     public int owner;
 
@@ -63,6 +65,10 @@ public class PeckingPiece implements DSet.Entry, PeckingConstants
 
     public int id;
 
+    /**
+     * Used by the server to keep track if this pieces' rank should be disclosed
+     * to all clients
+     */
     public transient boolean revealed = false;
 
     /*
