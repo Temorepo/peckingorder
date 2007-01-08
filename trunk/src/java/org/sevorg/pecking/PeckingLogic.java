@@ -3,7 +3,6 @@ package org.sevorg.pecking;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
-import org.sevorg.pecking.data.PeckingObject;
 import org.sevorg.pecking.data.PeckingPiece;
 import com.threerings.presents.dobj.DSet;
 
@@ -117,29 +116,39 @@ public class PeckingLogic implements PeckingConstants
         return piece.rank == WORM || piece.rank == CAGE;
     }
 
-    public void move(PeckingPiece src, int x, int y, PeckingObject _gameobj)
+    public PeckingPiece[] move(PeckingPiece src, int x, int y)
     {
         PeckingPiece dest = getPieceAt(x, y);
         if(dest == null) {
             // Simplest case, we're moving to an empty dest
-            _gameobj.move(src, x, y);
-            return;
+            return new PeckingPiece[] {src.copyWithNewPosition(x, y)};
         }
+        src.revealed = true;
+        dest.revealed = true;
         if(dest.rank == CAGE) {
             if(src.rank == CAGE_OPENER) {
-                _gameobj.replace(dest, src);
+                return replace(dest, src);
             } else {
-                _gameobj.removeFromBoard(src);
+                return new PeckingPiece[] {src.copyOffBoard()};
             }
         } else if((src.rank == ASSASSIN && dest.rank == MARSHALL)
                 || (src.rank < dest.rank)) {
-            _gameobj.replace(dest, src);
+            return replace(dest, src);
         } else if(src.rank == dest.rank) {
-            _gameobj.removeFromBoard(src);
-            _gameobj.removeFromBoard(dest);
+            return new PeckingPiece[] {src.copyOffBoard(), dest.copyOffBoard()};
         } else {
-            _gameobj.removeFromBoard(src);
+            return new PeckingPiece[] {src.copyOffBoard()};
         }
+    }
+
+    /**
+     * return - an array of length 2 with the piece src at the position of the
+     * piece at dest and dest off the board
+     */
+    private PeckingPiece[] replace(PeckingPiece dest, PeckingPiece src)
+    {
+        return new PeckingPiece[] {dest.copyOffBoard(),
+                                   src.copyWithNewPosition(dest.x, dest.y)};
     }
 
     public static boolean isInLake(int x, int y)

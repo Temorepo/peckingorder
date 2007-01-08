@@ -2,16 +2,21 @@ package org.sevorg.pecking.client;
 
 import org.sevorg.pecking.data.PeckingObject;
 import org.sevorg.pecking.data.PeckingPiece;
+import org.sevorg.pecking.data.PeckingPiecesObject;
 import com.threerings.crowd.client.PlaceView;
 import com.threerings.crowd.data.PlaceObject;
 import com.threerings.crowd.util.CrowdContext;
+import com.threerings.parlor.card.Log;
 import com.threerings.parlor.game.client.GameController;
+import com.threerings.presents.dobj.ObjectAccessException;
+import com.threerings.presents.dobj.Subscriber;
 import com.threerings.toybox.util.ToyBoxContext;
 
 /**
  * Manages the client side mechanics of the game.
  */
-public class PeckingController extends GameController
+public class PeckingController extends GameController implements
+        PeckingReceiver, Subscriber<PeckingPiecesObject>
 {
 
     /**
@@ -27,6 +32,13 @@ public class PeckingController extends GameController
     public void willEnterPlace(PlaceObject plobj)
     {
         super.willEnterPlace(plobj);
+        if(_ctx.getClient().getClientObject().receivers.containsKey(PeckingDecoder.RECEIVER_CODE)) {
+            Log.warning("Yuh oh, we already have a pecking  receiver registered and are trying for another...!");
+            Thread.dumpStack();
+        }
+        _ctx.getClient()
+                .getInvocationDirector()
+                .registerReceiver(new PeckingDecoder(this));
         // get a casted reference to our game object
         _gameobj = (PeckingObject)plobj;
         // determine our piece color (-1 if we're not a player)
@@ -68,10 +80,26 @@ public class PeckingController extends GameController
         // end of a game
     }
 
+    public void setPeckingPiecesObjectOid(int oid)
+    {
+        _ctx.getDObjectManager().subscribeToObject(oid, this);
+    }
+
+    public void requestFailed(int oid, ObjectAccessException cause)
+    {
+    // TODO - Figure out what causes this, what can be done....
+    }
+
+    public void objectAvailable(PeckingPiecesObject object)
+    {
+        _pieces = object;
+        _panel._bview.setPieceObject(object);
+    }
+
     public void move(PeckingPiece pie, int x, int y)
     {
         // tell the server we want to place our piece here
-        _gameobj.manager.invoke("movePiece", pie, x, y);
+        _gameobj.manager.invoke("movePiece", pie.id, x, y);
     }
 
     /** Our game panel. */
@@ -79,6 +107,8 @@ public class PeckingController extends GameController
 
     /** Our game distributed object. */
     protected PeckingObject _gameobj;
-    
+
+    protected PeckingPiecesObject _pieces;
+
     protected int _color;
 }

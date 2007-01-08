@@ -33,11 +33,25 @@ public class PeckingPiece implements DSet.Entry, PeckingConstants
      */
     public PeckingPiece(int owner, int rank, int x, int y, int id)
     {
+        this(owner, rank, x, y, id, rank != UNKNOWN);
+    }
+
+    /**
+     * Creates a piece owned by owner of rank rank positioned at x y
+     */
+    public PeckingPiece(int owner,
+                        int rank,
+                        int x,
+                        int y,
+                        int id,
+                        boolean revealed)
+    {
         this.owner = owner;
         this.rank = rank;
         this.x = x;
         this.y = y;
         this.id = id;
+        this.revealed = revealed;
     }
 
     /*
@@ -49,10 +63,12 @@ public class PeckingPiece implements DSet.Entry, PeckingConstants
 
     public int id;
 
+    public transient boolean revealed = false;
+
     /*
-     * The strength of a piece in a fight, starting with 1. The lower the
-     * value, the stronger the piece. Some ranks have special meanings as
-     * indicated in PeckingConstants.
+     * The strength of a piece in a fight, starting with 1. The lower the value,
+     * the stronger the piece. Some ranks have special meanings as indicated in
+     * PeckingConstants.
      */
     public int rank = UNKNOWN;
 
@@ -60,8 +76,28 @@ public class PeckingPiece implements DSet.Entry, PeckingConstants
     {
         return id;
     }
-    
-    public String toString(){
-        return "Piece " + id + " " + x + ", " + y;
+
+    public String toString()
+    {
+        return "Piece" + id + "(x=" + x + ",y=" + y + ",rank=" + rank
+                + ",owner=" + owner + ")";
+    }
+
+    /**
+     * @return - a copy of this PeckingPiece with its rank set to UNKNOWN
+     */
+    public PeckingPiece copyWithoutRank()
+    {
+        return new PeckingPiece(owner, UNKNOWN, x, y, id, revealed);
+    }
+
+    public PeckingPiece copyWithNewPosition(int newX, int newY)
+    {
+        return new PeckingPiece(owner, rank, newX, newY, id, revealed);
+    }
+
+    public PeckingPiece copyOffBoard()
+    {
+        return copyWithNewPosition(OFF_BOARD, OFF_BOARD);
     }
 }
