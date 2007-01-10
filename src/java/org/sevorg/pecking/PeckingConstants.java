@@ -17,7 +17,7 @@ public interface PeckingConstants
      * Phase after piece layout, when players are going back and forth moving
      * piecess
      */
-    public static final int PLAYING = 1;
+    public static final int PLAY = 1;
 
     public static final int RED = 0;
 

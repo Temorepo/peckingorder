@@ -35,9 +35,11 @@ public class PeckingPanel extends PlacePanel implements PeckingConstants
         setLayout(new BorderLayout());
         // create and add our board view
         Box boardAndBins = Box.createHorizontalBox();
+        boardAndBins.add(Box.createHorizontalGlue());
         boardAndBins.add(new PeckingPieceBin(ctx, ctrl, RED));
         boardAndBins.add(new PeckingBoardView(ctx, ctrl));
         boardAndBins.add(new PeckingPieceBin(ctx, ctrl, BLUE));
+        boardAndBins.add(Box.createHorizontalGlue());
         add(boardAndBins, BorderLayout.CENTER);
         // create a side panel to hold our chat and other extra interfaces
         JPanel sidePanel = GroupLayout.makeVStretchBox(5);

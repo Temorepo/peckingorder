@@ -121,7 +121,7 @@ public class PeckingManager extends GameManager implements PeckingConstants,
         ClientObject clobj = (ClientObject)PresentsServer.omgr.getObject(_playerOids[player]);
         PeckingSender.setPeckingPiecesObjectOid(clobj, pieces.getOid());
     }
-    
+
     @Override
     // from GameManager
     protected void gameDidEnd()
@@ -193,10 +193,26 @@ public class PeckingManager extends GameManager implements PeckingConstants,
         _turndel.endTurn();
     }
 
+    public void toggleReadyToPlay(BodyObject player)
+    {
+        if(_playerOids[BLUE] == player.getOid()) {
+            readyToPlay[BLUE] = !readyToPlay[BLUE];
+        } else if(_playerOids[RED] == player.getOid()) {
+            readyToPlay[RED] = !readyToPlay[RED];
+        }
+        for(boolean ready : readyToPlay) {
+            if(!ready) {
+                return;
+            }
+        }
+        _gameobj.setPhase(PLAY);
+    }
+
+    private boolean[] readyToPlay = new boolean[2];
+
     private PeckingPiecesObject redPieces = new PeckingPiecesObject(),
             bluePieces = new PeckingPiecesObject(),
             localPieces = new PeckingPiecesObject();
-
 
     /** Our game object. */
     protected PeckingObject _gameobj;

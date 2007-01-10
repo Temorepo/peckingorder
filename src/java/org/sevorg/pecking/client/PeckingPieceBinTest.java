@@ -15,12 +15,10 @@ public class PeckingPieceBinTest extends GameViewTest implements
     {
         return _view = new PeckingPieceBin(arg0, new PeckingController(), BLUE);
     }
-    
-
 
     protected void initInterface()
     {
-        for(PeckingPiece p : PeckingBoardViewTest.createPieces()){
+        for(PeckingPiece p : PeckingBoardViewTest.createPieces()) {
             _view.pieceUpdated(p);
         }
     }
@@ -30,6 +28,6 @@ public class PeckingPieceBinTest extends GameViewTest implements
         PeckingPieceBinTest test = new PeckingPieceBinTest();
         test.display();
     }
-    
+
     private PeckingPieceBin _view;
 }
