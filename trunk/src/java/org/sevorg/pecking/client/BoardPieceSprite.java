@@ -16,10 +16,8 @@ public class BoardPieceSprite extends PieceSprite implements PeckingConstants
 
     public void update(PeckingPiece piece)
     {
-        this._piece = piece;
         // set our location based on the location of the piece
-        setLocation(_piece.x * SIZE, _piece.y * SIZE);
-        // force a redraw in case our rank or type changed but not our location
-        invalidate();
+        setLocation(piece.x * SIZE, piece.y * SIZE);
+        super.update(piece);
     }
 }

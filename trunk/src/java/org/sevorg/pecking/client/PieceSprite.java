@@ -19,12 +19,17 @@ public abstract class PieceSprite extends Sprite implements PeckingConstants
     /** The dimensions of our sprite in pixels. */
     public static final int SIZE = 64;
 
+
     /**
-     * Called when the piece we are displaying has been updated.
+     * Called when the piece we are displaying has changed.
      * @param piece 
      */
-    public abstract void update(PeckingPiece piece);
-
+    public void update(PeckingPiece piece)
+    {
+        _piece = piece;
+        invalidate();
+    }
+    
     @Override
     public void paint(Graphics2D gfx)
     {
@@ -38,7 +43,11 @@ public abstract class PieceSprite extends Sprite implements PeckingConstants
         int pwid = _bounds.width - 6, phei = _bounds.height - 6;
         gfx.fillRect(px, py, pwid, phei);
         // then outline that rectangle in black
-        gfx.setColor(Color.black);
+        if(selected){
+            gfx.setColor(Color.yellow);
+        }else{
+            gfx.setColor(Color.black);
+        }
         gfx.drawRect(px, py, pwid, phei);
         gfx.setFont(new Font("Helvetica", Font.BOLD, 48));
         String name;
@@ -55,6 +64,8 @@ public abstract class PieceSprite extends Sprite implements PeckingConstants
         }
         gfx.drawString(name, _bounds.x + 20, _bounds.y + 48);
     }
+    
+    public boolean selected = false;
 
     protected PeckingPiece _piece;
 }
