@@ -64,8 +64,7 @@ public class PeckingController extends GameController implements
     // from PlaceController
     protected PlaceView createPlaceView(CrowdContext ctx)
     {
-        _panel = new PeckingPanel((ToyBoxContext)ctx, this);
-        return _panel;
+        return new PeckingPanel((ToyBoxContext)ctx, this);
     }
 
     @Override
@@ -125,7 +124,7 @@ public class PeckingController extends GameController implements
     public void addPeckingPiecesListener(SetListener listener)
     {
         peckingPiecesListeners.add(listener);
-        if(_pieces != null){
+        if(_pieces != null) {
             addAllPiecesToListener(listener);
         }
     }
@@ -139,7 +138,7 @@ public class PeckingController extends GameController implements
 
     private void addAllPiecesToListener(SetListener listener)
     {
-        if(_pieces == null){
+        if(_pieces == null) {
             return;
         }
         for(PeckingPiece piece : _pieces.pieces) {
@@ -148,22 +147,38 @@ public class PeckingController extends GameController implements
                                                                   piece));
         }
     }
+    
+    public void setReadyToPlay(){
+        _gameobj.manager.invoke("toggleReadyToPlay");
+    }
 
     public void move(PeckingPiece pie, int x, int y)
     {
         // tell the server we want to place our piece here
         _gameobj.manager.invoke("movePiece", pie.id, x, y);
     }
+    
+    public void setSelectedPiece(PeckingPiece p){
+        selectedPiece = p;
+    }
+    
+    public PeckingPiece getSelectedPiece(){
+        return selectedPiece;
+    }
+    
+    public int getColor(){
+        return _color;
+    }
 
     private Set<SetListener> peckingPiecesListeners = new HashSet<SetListener>();
 
-    /** Our game panel. */
-    protected PeckingPanel _panel;
 
     /** Our game distributed object. */
-    protected PeckingObject _gameobj;
+    private PeckingObject _gameobj;
 
-    protected PeckingPiecesObject _pieces;
+    private PeckingPiecesObject _pieces;
 
-    protected int _color;
+    private int _color;
+
+    private PeckingPiece selectedPiece;
 }

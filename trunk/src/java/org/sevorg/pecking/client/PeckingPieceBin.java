@@ -7,8 +7,11 @@ import java.util.List;
 import java.util.Set;
 import org.sevorg.pecking.PeckingConstants;
 import org.sevorg.pecking.PeckingLogic;
+import org.sevorg.pecking.data.PeckingObject;
 import org.sevorg.pecking.data.PeckingPiece;
 import org.sevorg.pecking.data.PeckingPiecesObject;
+import com.threerings.crowd.client.PlaceView;
+import com.threerings.crowd.data.PlaceObject;
 import com.threerings.media.MediaPanel;
 import com.threerings.presents.dobj.EntryAddedEvent;
 import com.threerings.presents.dobj.EntryRemovedEvent;
@@ -17,7 +20,7 @@ import com.threerings.presents.dobj.SetListener;
 import com.threerings.toybox.util.ToyBoxContext;
 
 public class PeckingPieceBin extends MediaPanel implements SetListener,
-        PeckingConstants
+        PeckingConstants, PlaceView
 {
 
     private static final double X_OFFSET = PieceSprite.SIZE * .2;
@@ -27,6 +30,7 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
                            int binOwner)
     {
         super(ctx.getFrameManager());
+        _ctx = ctx;
         _ctrl = ctrl;
         _ctrl.addPeckingPiecesListener(this);
         owner = binOwner;
@@ -60,13 +64,13 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
         pieceUpdated((PeckingPiece)event.getEntry());
     }
 
-    interface PieceStrategy
+    interface PieceLayout
     {
 
         public void update(PeckingPiece piece);
     }
 
-    class SetupPieceStrategy implements PieceStrategy
+    class HiddenPieceLayout implements PieceLayout
     {
 
         public void update(PeckingPiece piece)
@@ -87,6 +91,9 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
                 if(unrevealedSprites.size() > 0) {
                     removeSprite(unrevealedSprites.remove(unrevealedSprites.size() - 1));
                 }
+                if(unrevealedPieces.size() == 0) {
+                    _ctrl.setReadyToPlay();
+                }
             }
         }
 
@@ -95,7 +102,7 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
         private Set<PeckingPiece> unrevealedPieces = new HashSet<PeckingPiece>();
     }
 
-    class PlayPieceStrategy implements PieceStrategy
+    class RevealedPieceLayout implements PieceLayout
     {
 
         public void update(PeckingPiece piece)
@@ -130,12 +137,27 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
         if(piece.owner != owner) {
             return;
         }
-        strategy.update(piece);
+        layout.update(piece);
     }
 
-    private PieceStrategy strategy = new PlayPieceStrategy();
+    private PieceLayout layout;
+
+    private ToyBoxContext _ctx;
 
     private PeckingController _ctrl;
 
     private int owner;
+
+    public void didLeavePlace(PlaceObject plobj)
+    {}
+
+    public void willEnterPlace(PlaceObject plobj)
+    {
+        int color = ((PeckingObject)plobj).getPlayerIndex(((ToyBoxContext)_ctx).getUsername());
+        if(color == owner) {
+            layout = new RevealedPieceLayout();
+        } else {
+            layout = new HiddenPieceLayout();
+        }
+    }
 }
