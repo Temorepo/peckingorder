@@ -32,7 +32,7 @@ public class PeckingBoardViewTest extends GameViewTest implements
         for(int i = 0; i < 2; i++) {
             for(int j = 0; j < COUNT_BY_RANK.length; j++) {
                 for(int k = 0; k < COUNT_BY_RANK[j]; k++) {
-                    pieces.add(new PeckingPiece(i, j + 1));
+                    pieces.add(new PeckingPiece(i, j + 1, OFF_BOARD, OFF_BOARD, pieces.size()));
                 }
             }
         }

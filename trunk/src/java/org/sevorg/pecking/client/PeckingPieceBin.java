@@ -36,6 +36,19 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
         owner = binOwner;
     }
 
+    public void didLeavePlace(PlaceObject plobj)
+    {}
+
+    public void willEnterPlace(PlaceObject plobj)
+    {
+        int color = ((PeckingObject)plobj).getPlayerIndex(((ToyBoxContext)_ctx).getUsername());
+        if(color == owner) {
+            layout = new RevealedPieceLayout();
+        } else {
+            layout = new HiddenPieceLayout();
+        }
+    }
+
     @Override
     public Dimension getPreferredSize()
     {
@@ -83,14 +96,13 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
                                                            (int)(xOffset * X_OFFSET),
                                                            yOffset
                                                                    * PieceSprite.SIZE);
+                sprite.setRenderOrder(xOffset);
                 unrevealedSprites.add(sprite);
                 addSprite(sprite);
                 unrevealedPieces.add(piece);
             } else if(unrevealedPieces.contains(piece)) {
                 unrevealedPieces.remove(piece);
-                if(unrevealedSprites.size() > 0) {
-                    removeSprite(unrevealedSprites.remove(unrevealedSprites.size() - 1));
-                }
+                removeSprite(unrevealedSprites.remove(unrevealedSprites.size() - 1));
                 if(unrevealedPieces.size() == 0) {
                     _ctrl.setReadyToPlay();
                 }
@@ -132,7 +144,7 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
         private int[] numOnRow = new int[10];
     }
 
-    void pieceUpdated(PeckingPiece piece)
+    private void pieceUpdated(PeckingPiece piece)
     {
         if(piece.owner != owner) {
             return;
@@ -140,24 +152,11 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
         layout.update(piece);
     }
 
-    private PieceLayout layout;
+    private PieceLayout layout = new HiddenPieceLayout();
 
     private ToyBoxContext _ctx;
 
     private PeckingController _ctrl;
 
     private int owner;
-
-    public void didLeavePlace(PlaceObject plobj)
-    {}
-
-    public void willEnterPlace(PlaceObject plobj)
-    {
-        int color = ((PeckingObject)plobj).getPlayerIndex(((ToyBoxContext)_ctx).getUsername());
-        if(color == owner) {
-            layout = new RevealedPieceLayout();
-        } else {
-            layout = new HiddenPieceLayout();
-        }
-    }
 }

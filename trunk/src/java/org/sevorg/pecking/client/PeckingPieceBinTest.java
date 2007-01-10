@@ -3,6 +3,8 @@ package org.sevorg.pecking.client;
 import javax.swing.JComponent;
 import org.sevorg.pecking.PeckingConstants;
 import org.sevorg.pecking.data.PeckingPiece;
+import org.sevorg.pecking.data.PeckingPiecesObject;
+import com.threerings.presents.dobj.EntryAddedEvent;
 import com.threerings.toybox.util.GameViewTest;
 import com.threerings.toybox.util.ToyBoxContext;
 
@@ -19,7 +21,8 @@ public class PeckingPieceBinTest extends GameViewTest implements
     protected void initInterface()
     {
         for(PeckingPiece p : PeckingBoardViewTest.createPieces()) {
-            _view.pieceUpdated(p);
+            p.rank = UNKNOWN;
+            _view.entryAdded(new EntryAddedEvent<PeckingPiece>(-1, PeckingPiecesObject.PIECES, p));
         }
     }
 
