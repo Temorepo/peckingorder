@@ -8,11 +8,4 @@ public class BinPieceSprite extends PieceSprite
         setLocation(x, y);
         update(piece);
     }
-    
-    @Override
-    public void update(PeckingPiece piece)
-    {
-        _piece = piece;
-        invalidate();
-    }
 }

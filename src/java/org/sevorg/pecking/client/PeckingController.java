@@ -1,7 +1,10 @@
 package org.sevorg.pecking.client;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import org.sevorg.pecking.PeckingConstants;
 import org.sevorg.pecking.PeckingLogic;
 import org.sevorg.pecking.data.PeckingObject;
 import org.sevorg.pecking.data.PeckingPiece;
@@ -21,7 +24,7 @@ import com.threerings.toybox.util.ToyBoxContext;
  * Manages the client side mechanics of the game.
  */
 public class PeckingController extends GameController implements
-        PeckingReceiver, Subscriber<PeckingPiecesObject>
+        PeckingReceiver, Subscriber<PeckingPiecesObject>, PeckingConstants
 {
 
     /**
@@ -48,6 +51,11 @@ public class PeckingController extends GameController implements
         _gameobj = (PeckingObject)plobj;
         // determine our piece color (-1 if we're not a player)
         _color = _gameobj.getPlayerIndex(((ToyBoxContext)_ctx).getUsername());
+    }
+
+    public int getColor()
+    {
+        return _color;
     }
 
     @Override
@@ -147,8 +155,9 @@ public class PeckingController extends GameController implements
                                                                   piece));
         }
     }
-    
-    public void setReadyToPlay(){
+
+    public void setReadyToPlay()
+    {
         _gameobj.manager.invoke("toggleReadyToPlay");
     }
 
@@ -157,21 +166,36 @@ public class PeckingController extends GameController implements
         // tell the server we want to place our piece here
         _gameobj.manager.invoke("movePiece", pie.id, x, y);
     }
-    
-    public void setSelectedPiece(PeckingPiece p){
+
+    public void setSelectedPiece(PeckingPiece p)
+    {
+        for(PieceSelectedListener listener : listeners) {
+            if(selectedPiece != null) {
+                listener.selectionChanged(selectedPiece, false);
+            }
+            listener.selectionChanged(p, true);
+        }
         selectedPiece = p;
     }
-    
-    public PeckingPiece getSelectedPiece(){
+
+    public PeckingPiece getSelectedPiece()
+    {
         return selectedPiece;
     }
-    
-    public int getColor(){
-        return _color;
+
+    public void addPieceSelectedListener(PieceSelectedListener listener)
+    {
+        listeners.add(listener);
     }
 
-    private Set<SetListener> peckingPiecesListeners = new HashSet<SetListener>();
+    public void removePieceSelectedListener(PieceSelectedListener listener)
+    {
+        listeners.remove(listener);
+    }
 
+    private List<PieceSelectedListener> listeners = new ArrayList<PieceSelectedListener>();
+
+    private Set<SetListener> peckingPiecesListeners = new HashSet<SetListener>();
 
     /** Our game distributed object. */
     private PeckingObject _gameobj;
