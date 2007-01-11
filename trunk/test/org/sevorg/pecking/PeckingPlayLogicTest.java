@@ -4,13 +4,13 @@ import org.sevorg.pecking.data.PeckingPiece;
 import junit.framework.TestCase;
 import com.threerings.presents.dobj.DSet;
 
-public class PeckingLogicTest extends TestCase implements PeckingConstants
+public class PeckingPlayLogicTest extends TestCase implements PeckingConstants
 {
 
     public void setUp()
     {
         pieces = new TestDSet();
-        logic = new PeckingLogic(pieces);
+        logic = new PeckingPlayLogic(pieces);
         // A SCOUT in the corner
         originScout = pieces.addPiece(RED, SCOUT, 0, 0);
         pieces.addPiece(RED, CAGE, 1, 0);
@@ -144,7 +144,7 @@ public class PeckingLogicTest extends TestCase implements PeckingConstants
 
     private PeckingPiece originScout;
 
-    private PeckingLogic logic;
+    private PeckingPlayLogic logic;
 
     private TestDSet pieces;
 }

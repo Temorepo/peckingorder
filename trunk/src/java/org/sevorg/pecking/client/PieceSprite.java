@@ -3,33 +3,40 @@ package org.sevorg.pecking.client;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import org.sevorg.pecking.PeckingConstants;
 import org.sevorg.pecking.data.PeckingPiece;
 import com.threerings.media.sprite.Sprite;
 
-public abstract class PieceSprite extends Sprite implements PeckingConstants
+public class PieceSprite extends Sprite implements PeckingConstants
 {
 
     public PieceSprite()
     {
         super(SIZE, SIZE);
     }
+    
+    public PieceSprite(PeckingPiece piece, int x, int y){
+        this();
+        setLocation(x, y);
+        update(piece);
+    }
 
     /** The dimensions of our sprite in pixels. */
-    public static final int SIZE = 64;
-
+    public static final int SIZE = 48;
 
     /**
      * Called when the piece we are displaying has changed.
-     * @param piece 
+     * 
+     * @param piece
      */
     public void update(PeckingPiece piece)
     {
         _piece = piece;
         invalidate();
     }
-    
+
     @Override
     public void paint(Graphics2D gfx)
     {
@@ -43,13 +50,13 @@ public abstract class PieceSprite extends Sprite implements PeckingConstants
         int pwid = _bounds.width - 6, phei = _bounds.height - 6;
         gfx.fillRect(px, py, pwid, phei);
         // then outline that rectangle in black
-        if(selected){
+        if(selected) {
             gfx.setColor(Color.yellow);
-        }else{
+        } else {
             gfx.setColor(Color.black);
         }
         gfx.drawRect(px, py, pwid, phei);
-        gfx.setFont(new Font("Helvetica", Font.BOLD, 48));
+        gfx.setFont(new Font("Helvetica", Font.BOLD, 36));
         String name;
         if(_piece.rank == UNKNOWN) {
             name = "";
@@ -62,9 +69,14 @@ public abstract class PieceSprite extends Sprite implements PeckingConstants
         } else {
             name = "" + _piece.rank;
         }
-        gfx.drawString(name, _bounds.x + 20, _bounds.y + 48);
+        Rectangle bounds = gfx.getFontMetrics()
+                .getStringBounds(name, gfx)
+                .getBounds();
+        gfx.drawString(name,
+                       _bounds.x + _bounds.width / 2 - bounds.width / 2,
+                       _bounds.y + _bounds.height / 2 + bounds.height / 2);
     }
-    
+
     public boolean selected = false;
 
     protected PeckingPiece _piece;

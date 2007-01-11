@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Set;
 import org.sevorg.pecking.PeckingConstants;
 import org.sevorg.pecking.PeckingLogic;
+import org.sevorg.pecking.PeckingPlayLogic;
+import org.sevorg.pecking.PeckingSetupLogic;
 import org.sevorg.pecking.data.PeckingObject;
 import org.sevorg.pecking.data.PeckingPiece;
 import org.sevorg.pecking.data.PeckingPiecesObject;
@@ -15,6 +17,8 @@ import com.threerings.crowd.util.CrowdContext;
 import com.threerings.parlor.card.Log;
 import com.threerings.parlor.game.client.GameController;
 import com.threerings.presents.dobj.EntryAddedEvent;
+import com.threerings.presents.dobj.EntryRemovedEvent;
+import com.threerings.presents.dobj.EntryUpdatedEvent;
 import com.threerings.presents.dobj.ObjectAccessException;
 import com.threerings.presents.dobj.SetListener;
 import com.threerings.presents.dobj.Subscriber;
@@ -24,8 +28,14 @@ import com.threerings.toybox.util.ToyBoxContext;
  * Manages the client side mechanics of the game.
  */
 public class PeckingController extends GameController implements
-        PeckingReceiver, Subscriber<PeckingPiecesObject>, PeckingConstants
+        PeckingReceiver, Subscriber<PeckingPiecesObject>, PeckingConstants,
+        SetListener
 {
+
+    public PeckingController()
+    {
+        addPeckingPiecesListener(this);
+    }
 
     /**
      * Requests that we leave the game and return to the lobby.
@@ -91,7 +101,9 @@ public class PeckingController extends GameController implements
         super.gameDidEnd();
         // here we can clear out anything that needs to be cleared out at the
         // end of a game
-        clearPieces();
+        // TODO - I was clearing out pieces at game end, but this is called when
+        // the game starts from what I can tell
+        // clearPieces();
     }
 
     private void clearPieces()
@@ -122,11 +134,21 @@ public class PeckingController extends GameController implements
             object.addListener(listener);
             addAllPiecesToListener(listener);
         }
+        for(PeckingPiece piece : _pieces.pieces) {
+            if(piece.rank == MARSHALL && piece.owner == _color) {
+                setSelectedPiece(piece);
+                break;
+            }
+        }
     }
 
     public PeckingLogic createLogic()
     {
-        return new PeckingLogic(_pieces.pieces);
+        if(_gameobj.phase == SETUP) {
+            return new PeckingSetupLogic(_pieces.pieces);
+        } else {
+            return new PeckingPlayLogic(_pieces.pieces);
+        }
     }
 
     public void addPeckingPiecesListener(SetListener listener)
@@ -161,10 +183,13 @@ public class PeckingController extends GameController implements
         _gameobj.manager.invoke("toggleReadyToPlay");
     }
 
-    public void move(PeckingPiece pie, int x, int y)
+    /**
+     * Move the selected piece to x, y
+     */
+    public void moveSelected(int x, int y)
     {
-        // tell the server we want to place our piece here
-        _gameobj.manager.invoke("movePiece", pie.id, x, y);
+        // tell the server we want to move our selected piece to x y
+        _gameobj.manager.invoke("movePiece", getSelectedPiece().id, x, y);
     }
 
     public void setSelectedPiece(PeckingPiece p)
@@ -205,4 +230,19 @@ public class PeckingController extends GameController implements
     private int _color;
 
     private PeckingPiece selectedPiece;
+
+    public void entryAdded(EntryAddedEvent event)
+    {}
+
+    public void entryRemoved(EntryRemovedEvent event)
+    {}
+
+    public void entryUpdated(EntryUpdatedEvent event)
+    {
+        if(event.getName().equals(PeckingPiecesObject.PIECES)) {
+            if(event.getEntry().equals(getSelectedPiece())) {
+                setSelectedPiece((PeckingPiece)event.getEntry());
+            }
+        }
+    }
 }

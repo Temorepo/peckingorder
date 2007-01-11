@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import org.sevorg.pecking.PeckingConstants;
 import org.sevorg.pecking.PeckingLogic;
+import org.sevorg.pecking.PeckingPlayLogic;
+import org.sevorg.pecking.PeckingSetupLogic;
 import org.sevorg.pecking.client.PeckingBoardViewTest;
 import org.sevorg.pecking.data.PeckingObject;
 import org.sevorg.pecking.data.PeckingPiece;
@@ -89,16 +91,16 @@ public class PeckingManager extends GameManager implements PeckingConstants,
         for(int i = 0; i < defaultPieces.length; i++) {
             unused.add(i);
         }
-        int redCount = 0, blueCount = 0;
+        // int redCount = 0, blueCount = 0;
         for(int i = 0; i < defaultPieces.length; i++) {
             defaultPieces[i].revealed = false;
-            if(defaultPieces[i].owner == RED) {
-                defaultPieces[i].x = redCount % 10;
-                defaultPieces[i].y = redCount++ / 10;
-            } else {
-                defaultPieces[i].x = blueCount % 10;
-                defaultPieces[i].y = 9 - blueCount++ / 10;
-            }
+            // if(defaultPieces[i].owner == RED) {
+            // defaultPieces[i].x = redCount % 10;
+            // defaultPieces[i].y = redCount++ / 10;
+            // } else {
+            // defaultPieces[i].x = blueCount % 10;
+            // defaultPieces[i].y = 9 - blueCount++ / 10;
+            // }
             // Give each piece a distinct, random id
             // The id can't just be the array index(or any other constant
             // assignment) as that would allow a cheating client to figure out
@@ -138,7 +140,7 @@ public class PeckingManager extends GameManager implements PeckingConstants,
     protected void assignWinners(boolean[] winners)
     {
         super.assignWinners(winners);
-        PeckingLogic logic = new PeckingLogic(localPieces.pieces);
+        PeckingPlayLogic logic = new PeckingPlayLogic(localPieces.pieces);
         // A player is a winner if his opponents worm is off the board and
         // either he can move, or both he and his opponent can't move which is a
         // draw
@@ -148,7 +150,7 @@ public class PeckingManager extends GameManager implements PeckingConstants,
 
     public void turnDidEnd()
     {
-        if(new PeckingLogic(localPieces.pieces).shouldEndGame()) {
+        if(new PeckingPlayLogic(localPieces.pieces).shouldEndGame()) {
             endGame();
         }
     }
@@ -164,13 +166,20 @@ public class PeckingManager extends GameManager implements PeckingConstants,
         PeckingPiece p = localPieces.pieces.get(pieceId);
         // make sure it's this player's turn
         int pidx = _turndel.getTurnHolderIndex();
-        if(_playerOids[pidx] != player.getOid()) {
-            System.err.println("Requested to place piece by non-turn holder "
-                    + "[who=" + player.who() + ", turnHolder="
-                    + _gameobj.turnHolder + "].");
-            return;
+        PeckingLogic logic;
+        if(_gameobj.phase == PLAY) {
+            if(_playerOids[pidx] != player.getOid()) {
+                System.err.println("Requested to place piece by non-turn holder "
+                        + "[who="
+                        + player.who()
+                        + ", turnHolder="
+                        + _gameobj.turnHolder + "].");
+                return;
+            }
+            logic = new PeckingPlayLogic(localPieces.pieces);
+        } else {
+            logic = new PeckingSetupLogic(localPieces.pieces);
         }
-        PeckingLogic logic = new PeckingLogic(localPieces.pieces);
         PeckingPiece[] movedPieces = logic.move(p, x, y);
         if(movedPieces.length == 0) {
             System.err.println("Received illegal move request " + "[who="
@@ -190,7 +199,9 @@ public class PeckingManager extends GameManager implements PeckingConstants,
             }
             localPieces.updatePieces(movedPiece);
         }
-        _turndel.endTurn();
+        if(_gameobj.phase == PLAY) {
+            _turndel.endTurn();
+        }
     }
 
     public void toggleReadyToPlay(BodyObject player)

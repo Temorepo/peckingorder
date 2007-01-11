@@ -1,0 +1,150 @@
+package org.sevorg.pecking;
+
+import java.awt.Point;
+import java.util.ArrayList;
+import java.util.List;
+import org.sevorg.pecking.data.PeckingPiece;
+import com.threerings.presents.dobj.DSet;
+
+public class PeckingPlayLogic extends PeckingLogic
+{
+
+    public PeckingPlayLogic(DSet<PeckingPiece> pieces)
+    {
+        super(pieces);
+    }
+
+    public boolean isWinner(int owner)
+    {
+        int other = owner == RED ? BLUE : RED;
+        // A player is a winner if his opponents worm is off the board or
+        // either he can move, or both he and his opponent can't move which is a
+        // draw
+        return !isWormOffBoard(owner)
+                && (isWormOffBoard(other) || hasLegalMoves(owner) || !hasLegalMoves(other));
+    }
+
+    public boolean shouldEndGame()
+    {
+        return isWormOffBoard(RED) || isWormOffBoard(BLUE)
+                || !hasLegalMoves(RED) || !hasLegalMoves(BLUE);
+    }
+
+    public boolean isWormOffBoard(int owner)
+    {
+        for(PeckingPiece p : _pieces) {
+            if(p.rank == WORM && p.owner == owner && isOffBoard(p)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean hasLegalMoves(int owner)
+    {
+        for(PeckingPiece p : _pieces) {
+            if(p.owner == owner && getLegalMoves(p).size() > 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public List<Point> getLegalMoves(PeckingPiece p)
+    {
+        List<Point> points = new ArrayList<Point>();
+        if(isImmobile(p)) {
+            // That makes calculating moves easy
+        } else if(p.rank == SCOUT) {
+            int x = p.x, y = p.y;
+            while(addIfLegalAndCanContinue(p, --x, y, points)) {}
+            x = p.x;
+            while(addIfLegalAndCanContinue(p, ++x, y, points)) {}
+            x = p.x;
+            while(addIfLegalAndCanContinue(p, x, ++y, points)) {}
+            y = p.y;
+            while(addIfLegalAndCanContinue(p, x, --y, points)) {}
+        } else {
+            int[][] cardinalPoints = new int[][] { {p.x + 1, p.y},
+                                                  {p.x - 1, p.y},
+                                                  {p.x, p.y + 1},
+                                                  {p.x, p.y - 1}};
+            for(int[] point : cardinalPoints) {
+                if(isLegal(p, point[0], point[1])) {
+                    points.add(new Point(point[0], point[1]));
+                }
+            }
+        }
+        return points;
+    }
+
+    private boolean addIfLegalAndCanContinue(PeckingPiece pie,
+                                             int x,
+                                             int y,
+                                             List<Point> points)
+    {
+        if(isLegal(pie, x, y)) {
+            points.add(new Point(x, y));
+        } else {
+            return false;
+        }
+        return getPieceAt(x, y) == null;
+    }
+
+    private boolean isLegal(PeckingPiece piece, int x, int y)
+    {
+        if(isOffBoard(x, y) || isInLake(x, y) || isImmobile(piece)) {
+            return false;
+        }
+        PeckingPiece other = getPieceAt(x, y);
+        return other == null || other.owner != piece.owner;
+    }
+
+    private boolean isImmobile(PeckingPiece piece)
+    {
+        return piece.rank == WORM || piece.rank == CAGE;
+    }
+
+    public PeckingPiece[] move(PeckingPiece src, int x, int y)
+    {
+        if(!isLegal(src, x, y)) {
+            return new PeckingPiece[] {};
+        }
+        PeckingPiece dest = getPieceAt(x, y);
+        if(dest == null) {
+            // Simplest case, we're moving to an empty dest
+            return new PeckingPiece[] {src.copyWithNewPosition(x, y)};
+        }
+        if(dest.rank == CAGE) {
+            if(src.rank == CAGE_OPENER) {
+                return replace(dest, src);
+            } else {
+                if(!dest.revealed) {
+                    return new PeckingPiece[] {src.copyOffBoard(),
+                                               dest.copyRevealed()};
+                }
+                return new PeckingPiece[] {src.copyOffBoard()};
+            }
+        } else if((src.rank == ASSASSIN && dest.rank == MARSHALL)
+                || (src.rank < dest.rank)) {
+            return replace(dest, src);
+        } else if(src.rank == dest.rank) {
+            return new PeckingPiece[] {src.copyOffBoard(), dest.copyOffBoard()};
+        } else {
+            if(!dest.revealed) {
+                return new PeckingPiece[] {src.copyOffBoard(),
+                                           dest.copyRevealed()};
+            }
+            return new PeckingPiece[] {src.copyOffBoard()};
+        }
+    }
+    /**
+     * return - an array of length 2 with the piece src at the position of the
+     * piece at dest and dest off the board
+     */
+    private PeckingPiece[] replace(PeckingPiece dest, PeckingPiece src)
+    {
+        return new PeckingPiece[] {dest.copyOffBoard(),
+                                   src.copyWithNewPosition(dest.x, dest.y, true)};
+    }
+}
