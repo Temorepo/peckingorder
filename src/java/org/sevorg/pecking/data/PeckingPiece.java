@@ -82,13 +82,15 @@ public class PeckingPiece implements DSet.Entry, PeckingConstants
     {
         return id;
     }
-    
-    public int hashCode(){
+
+    public int hashCode()
+    {
         return id;
     }
-    
-    public boolean equals(Object other){
-        if(other instanceof PeckingPiece){
+
+    public boolean equals(Object other)
+    {
+        if(other instanceof PeckingPiece) {
             return id == ((PeckingPiece)other).id;
         }
         return false;
@@ -136,10 +138,16 @@ public class PeckingPiece implements DSet.Entry, PeckingConstants
     }
 
     /**
-     * @return - a copy of this piece with x and y set to OFF_BOARD and revealed set to true
+     * @return - a copy of this piece with x and y set to OFF_BOARD and revealed
+     *         set to true
      */
     public PeckingPiece copyOffBoard()
     {
-        return copyWithNewPosition(OFF_BOARD, OFF_BOARD, true);
+        return copyOffBoard(true);
+    }
+
+    public PeckingPiece copyOffBoard(boolean newRevealed)
+    {
+        return copyWithNewPosition(OFF_BOARD, OFF_BOARD, newRevealed);
     }
 }

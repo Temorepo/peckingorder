@@ -11,7 +11,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import org.sevorg.pecking.PeckingConstants;
 import org.sevorg.pecking.PeckingLogic;
@@ -20,7 +19,7 @@ import org.sevorg.pecking.data.PeckingPiece;
 import org.sevorg.pecking.data.PeckingPiecesObject;
 import com.threerings.crowd.client.PlaceView;
 import com.threerings.crowd.data.PlaceObject;
-import com.threerings.media.VirtualMediaPanel;
+import com.threerings.media.MediaPanel;
 import com.threerings.presents.dobj.AttributeChangeListener;
 import com.threerings.presents.dobj.AttributeChangedEvent;
 import com.threerings.presents.dobj.EntryAddedEvent;
@@ -32,8 +31,9 @@ import com.threerings.toybox.util.ToyBoxContext;
 /**
  * Displays the main game interface (the board).
  */
-public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
-        SetListener, AttributeChangeListener, PeckingConstants
+public class PeckingBoardView extends MediaPanel implements PlaceView,
+        SetListener, AttributeChangeListener, PeckingConstants,
+        PieceSelectedListener
 {
 
     public PeckingBoardView(ToyBoxContext ctx, PeckingController ctrl)
@@ -42,6 +42,7 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
         _ctx = ctx;
         _ctrl = ctrl;
         _ctrl.addPeckingPiecesListener(this);
+        _ctrl.addPieceSelectedListener(this);
     }
 
     // from interface PlaceView
@@ -75,6 +76,7 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
 
     private void setPhase(int newPhase)
     {
+        phase = newPhase;
         if(phaseMouseListener != null) {
             removeMouseListener(phaseMouseListener);
         }
@@ -85,6 +87,8 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
         }
         addMouseListener(phaseMouseListener);
     }
+
+    private int phase;
 
     private class PlayMouseAdapter extends MouseAdapter
     {
@@ -97,23 +101,19 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
                     || PeckingLogic.isOffBoard(clickX, clickY)) {
                 return;
             }
-            if(possibleMoves != null) {
+            PeckingLogic logic = _ctrl.createLogic();
+            if(_ctrl.getSelectedPiece() != null) {
                 Point click = new Point(clickX, clickY);
-                for(Point p : possibleMoves) {
+                for(Point p : logic.getLegalMoves(_ctrl.getSelectedPiece())) {
                     if(click.equals(p)) {
-                        _ctrl.move(selectedPiece, p.x, p.y);
-                        getRegionManager().addDirtyRegion(new Rectangle(getPreferredSize()));
+                        _ctrl.moveSelected(p.x, p.y);
                         return;
                     }
                 }
             }
-            clearSelectedPiece();
-            PeckingLogic logic = _ctrl.createLogic();
             PeckingPiece p = logic.getPieceAt(clickX, clickY);
             if(p != null && p.owner == _ctrl.getColor()) {
-                selectedPiece = p;
-                possibleMoves = logic.getLegalMoves(p);
-                getRegionManager().addDirtyRegion(new Rectangle(getPreferredSize()));
+                _ctrl.setSelectedPiece(p);
             }
         }
     }
@@ -127,20 +127,17 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
             int clickX = e.getX() / PieceSprite.SIZE;
             int clickY = e.getY() / PieceSprite.SIZE;
             if(PeckingLogic.isInLake(clickX, clickY)
-                    || PeckingLogic.isOffBoard(clickX, clickY)
-                    || (_ctrl.getColor() == RED && clickY > 3)
-                    || (_ctrl.getColor() == BLUE && clickY < 6)) {
+                    || PeckingLogic.isOffBoard(clickX, clickY)) {
                 return;
             }
             PeckingLogic logic = _ctrl.createLogic();
             PeckingPiece current = logic.getPieceAt(clickX, clickY);
             if(_ctrl.getSelectedPiece() != null) {
-                _ctrl.move(_ctrl.getSelectedPiece(), clickX, clickY);
+                _ctrl.moveSelected(clickX, clickY);
             }
             if(current != null) {
                 _ctrl.setSelectedPiece(current);
             }
-            getRegionManager().addDirtyRegion(new Rectangle(getPreferredSize()));
         }
     }
 
@@ -165,9 +162,6 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
 
     protected void pieceUpdated(PeckingPiece piece)
     {
-        if(selectedPiece != null && piece.id == selectedPiece.id) {
-            clearSelectedPiece();
-        }
         if(piece.x == OFF_BOARD) {
             if(sprites.containsKey(piece.id)) {
                 removeSprite(sprites.get(piece.id));
@@ -175,20 +169,14 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
             }
         } else {
             if(!sprites.containsKey(piece.id)) {
-                BoardPieceSprite sprite = new BoardPieceSprite(piece);
+                PieceSprite sprite = new PieceSprite(piece, piece.x
+                        * PieceSprite.SIZE, piece.y * PieceSprite.SIZE);
                 sprites.put(piece.id, sprite);
                 addSprite(sprite);
             } else {
                 sprites.get(piece.id).update(piece);
             }
         }
-    }
-
-    private void clearSelectedPiece()
-    {
-        selectedPiece = null;
-        possibleMoves = null;
-        getRegionManager().addDirtyRegion(new Rectangle(getPreferredSize()));
     }
 
     @Override
@@ -210,7 +198,7 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
         }
     }
 
-    protected void paintBetween(Graphics2D gfx, Rectangle dirtyRect)
+    protected void paintInFront(Graphics2D gfx, Rectangle dirtyRect)
     {
         // Draw lakes in the middle of the board
         gfx.setColor(Color.DARK_GRAY);
@@ -222,15 +210,30 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
                      4 * PieceSprite.SIZE,
                      2 * PieceSprite.SIZE,
                      2 * PieceSprite.SIZE);
-        if(selectedPiece != null) {
-            gfx.setColor(Color.YELLOW);
+        if(_ctrl.getSelectedPiece() != null) {
+            gfx.setColor(Color.GREEN);
             Stroke current = gfx.getStroke();
             gfx.setStroke(FAT_STROKE);
-            gfx.drawRect(selectedPiece.x * PieceSprite.SIZE, selectedPiece.y
-                    * PieceSprite.SIZE, PieceSprite.SIZE, PieceSprite.SIZE);
-            gfx.setColor(Color.GREEN);
-            if(possibleMoves != null) {
-                for(Point poi : possibleMoves) {
+            if(phase == SETUP) {
+                int startRow, stopRow;
+                if(_ctrl.getColor() == BLUE) {
+                    startRow = 0;
+                    stopRow = 4;
+                } else {
+                    startRow = 6;
+                    stopRow = 10;
+                }
+                for(int i = 0; i < 10; i++) {
+                    for(int j = startRow; j < stopRow; j++) {
+                        gfx.drawRect(i * PieceSprite.SIZE,
+                                     j * PieceSprite.SIZE,
+                                     PieceSprite.SIZE,
+                                     PieceSprite.SIZE);
+                    }
+                }
+            } else {
+                for(Point poi : _ctrl.createLogic()
+                        .getLegalMoves(_ctrl.getSelectedPiece())) {
                     gfx.drawRect(poi.x * PieceSprite.SIZE,
                                  poi.y * PieceSprite.SIZE,
                                  PieceSprite.SIZE,
@@ -251,15 +254,16 @@ public class PeckingBoardView extends VirtualMediaPanel implements PlaceView,
 
     private PeckingController _ctrl;
 
-    private PeckingPiece selectedPiece;
-
-    private List<Point> possibleMoves;
-
-    private Map<Comparable, BoardPieceSprite> sprites = new HashMap<Comparable, BoardPieceSprite>();
+    private Map<Comparable, PieceSprite> sprites = new HashMap<Comparable, PieceSprite>();
 
     private Dimension boardSize = new Dimension(10, 10);
 
     private static final BasicStroke FAT_STROKE = new BasicStroke(5);
 
     private MouseListener phaseMouseListener;
+
+    public void selectionChanged(PeckingPiece changedPiece, boolean newValue)
+    {
+        getRegionManager().invalidateRegion(getBounds());
+    }
 }

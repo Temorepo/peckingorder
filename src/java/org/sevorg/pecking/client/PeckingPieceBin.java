@@ -1,7 +1,10 @@
 package org.sevorg.pecking.client;
 
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -62,6 +65,15 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
                              10 * PieceSprite.SIZE + 1);
     }
 
+    @Override
+    protected void paintBehind(Graphics2D gfx, Rectangle dirtyRect)
+    {
+        super.paintBehind(gfx, dirtyRect);
+        // fill in our background color
+        gfx.setColor(Color.WHITE);
+        gfx.fill(dirtyRect);
+    }
+
     public void entryAdded(EntryAddedEvent event)
     {
         if(!event.getName().equals(PeckingPiecesObject.PIECES)) {
@@ -96,10 +108,9 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
                     && !unrevealedPieces.contains(piece)) {
                 int xOffset = unrevealedSprites.size() % 8;
                 int yOffset = unrevealedSprites.size() / 8;
-                BinPieceSprite sprite = new BinPieceSprite(piece,
-                                                           (int)(xOffset * X_SHIFT),
-                                                           yOffset
-                                                                   * PieceSprite.SIZE);
+                PieceSprite sprite = new PieceSprite(piece,
+                                                     (int)(xOffset * X_SHIFT),
+                                                     yOffset * PieceSprite.SIZE);
                 sprite.setRenderOrder(xOffset);
                 unrevealedSprites.add(sprite);
                 addSprite(sprite);
@@ -113,7 +124,7 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
             }
         }
 
-        private List<BinPieceSprite> unrevealedSprites = new ArrayList<BinPieceSprite>();
+        private List<PieceSprite> unrevealedSprites = new ArrayList<PieceSprite>();
 
         private Set<PeckingPiece> unrevealedPieces = new HashSet<PeckingPiece>();
     }
@@ -129,7 +140,7 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
             {
                 if(_ctrl.getSelectedPiece() != null
                         && !PeckingLogic.isOffBoard(_ctrl.getSelectedPiece())) {
-                    _ctrl.move(_ctrl.getSelectedPiece(), OFF_BOARD, OFF_BOARD);
+                    _ctrl.moveSelected(OFF_BOARD, OFF_BOARD);
                 }
                 int clickRow = e.getY() / PieceSprite.SIZE;
                 int lastFilled = findLastFilledSlot(clickRow);
@@ -139,7 +150,7 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
                     _ctrl.setSelectedPiece(pieces[clickRow][lastFilled]._piece);
                 } else if(clickRow == MARSHALL_ROW || clickRow == WORM_ROW) {
                     if(pieces[clickRow][LAST_COLUMN] != null
-                            && e.getX() > pieces[clickRow][LAST_COLUMN].getX()) {
+                            && e.getX() >= pieces[clickRow][LAST_COLUMN].getX()) {
                         _ctrl.setSelectedPiece(pieces[clickRow][LAST_COLUMN]._piece);
                     }
                 }
@@ -175,14 +186,14 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
         {
             Point coords = findSprite(changedPiece);
             if(coords != null) {
-                PieceSprite sprite = pieces[coords.x][coords.y];
+                PieceSprite sprite = pieces[coords.y][coords.x];
                 sprite.selected = newValue;
                 sprite.invalidate();
             }
         }
 
         /**
-         * @return - the row and column of a sprite as x and y in the point
+         * @return - the column and row of a sprite as x and y in the point
          *         respectively
          */
         private Point findSprite(PeckingPiece piece)
@@ -191,7 +202,7 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
                 for(int j = 0; j < pieces[i].length; j++) {
                     if(pieces[i][j] != null
                             && pieces[i][j]._piece.equals(piece)) {
-                        return new Point(i, j);
+                        return new Point(j, i);
                     }
                 }
             }
@@ -217,22 +228,30 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
                     // A piece already in the bin was modified in a way that
                     // didn't move it
                 } else {
-                    // Piece moved out of bin, remove sprite from panel and
-                    // shift everything left in the array
-                    PieceSprite[] row = pieces[existingSpriteCoords.x];
-                    removeSprite(row[existingSpriteCoords.y]);
-                    row[existingSpriteCoords.y] = null;
-                    for(int i = existingSpriteCoords.y + 1; i < row.length
-                            && row[i] != null; i++) {
-                        row[i - 1] = row[i];
-                        row[i - 1].setLocation((int)(i * X_SHIFT),
-                                               existingSpriteCoords.x
-                                                       * PieceSprite.SIZE);
+                    // Piece moved out of bin, remove sprite from panel
+                    int row = existingSpriteCoords.y, col = existingSpriteCoords.x;
+                    removeSprite(pieces[row][col]);
+                    pieces[row][col] = null;
+                    for(int i = row; i < pieces.length; i++) {
+                        for(int j = pieces[i].length - 1; j >= 0; j--) {
+                            if(pieces[i][j] != null) {
+                                _ctrl.setSelectedPiece(pieces[i][j]._piece);
+                                return;
+                            }
+                        }
+                    }
+                    for(int i = 0; i < row; i++) {
+                        for(int j = pieces[i].length - 1; j >= 0; j--) {
+                            if(pieces[i][j] != null) {
+                                _ctrl.setSelectedPiece(pieces[i][j]._piece);
+                                return;
+                            }
+                        }
                     }
                 }
                 return;
             }
-            if(!PeckingLogic.isOffBoard(piece)){
+            if(!PeckingLogic.isOffBoard(piece)) {
                 return;
             }
             int row = piece.rank - 2;
@@ -247,19 +266,22 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
             } else if(piece.rank == GENERAL || piece.rank == WORM) {
                 column = LAST_COLUMN;// Move it all the way to the right
             }
-            BinPieceSprite sprite = new BinPieceSprite(piece,
-                                                       (int)(column * X_SHIFT),
-                                                       row * PieceSprite.SIZE);
+            PieceSprite sprite = new PieceSprite(piece,
+                                                 (int)(column * X_SHIFT),
+                                                 row * PieceSprite.SIZE);
             sprite.setRenderOrder(column);
             pieces[row][column] = sprite;
             addSprite(sprite);
+            if(listener != null) {
+                _ctrl.setSelectedPiece(piece);
+            }
         }
 
         int LAST_COLUMN = 7;
 
         private int MARSHALL_ROW = 0, WORM_ROW = 8;
 
-        private BinPieceSprite[][] pieces = new BinPieceSprite[10][8];
+        private PieceSprite[][] pieces = new PieceSprite[10][8];
 
         private MouseListener listener;
     }
