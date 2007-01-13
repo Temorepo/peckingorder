@@ -91,20 +91,8 @@ public class PeckingManager extends GameManager implements PeckingConstants,
         for(int i = 0; i < defaultPieces.length; i++) {
             unused.add(i);
         }
-        int redCount = 0, blueCount = 0;
         for(int i = 0; i < defaultPieces.length; i++) {
             defaultPieces[i].revealed = false;
-            if(defaultPieces[i].owner == BLUE) {
-                if(blueCount < 39) {
-                    defaultPieces[i].x = blueCount % 10;
-                    defaultPieces[i].y = blueCount++ / 10;
-                }
-            } else {
-                if(redCount < 39) {
-                    defaultPieces[i].x = redCount % 10;
-                    defaultPieces[i].y = 9 - redCount++ / 10;
-                }
-            }
             // Give each piece a distinct, random id
             // The id can't just be the array index(or any other constant
             // assignment) as that would allow a cheating client to figure out
@@ -126,6 +114,36 @@ public class PeckingManager extends GameManager implements PeckingConstants,
         PresentsServer.omgr.registerObject(pieces);
         ClientObject clobj = (ClientObject)PresentsServer.omgr.getObject(_playerOids[player]);
         PeckingSender.setPeckingPiecesObjectOid(clobj, pieces.getOid());
+    }
+
+    public void gameDidStart()
+    {
+        super.gameDidStart();
+        setupInitialGameState();
+    }
+
+    private void setupInitialGameState()
+    {
+        String state = System.getProperty(INITIAL_GAME_STATE);
+        if(RIGHT_BEFORE_PLAY_END.equals(state)) {} else if(PLAY_BEGIN.equals(state)
+                || SETUP_END.equals(state)) {
+            int redCount = 0, blueCount = 0;
+            
+            PeckingPiece[] pieces = localPieces.pieces.toArray(new PeckingPiece[80]);
+            for(PeckingPiece p : pieces) {
+                if(p.owner == BLUE) {
+                    movePiece(p.copyWithNewPosition(blueCount % 10,
+                                                    blueCount++ / 10));
+                } else {
+                    movePiece(p.copyWithNewPosition(redCount % 10,
+                                                    9 - redCount++ / 10));
+                }
+            }
+            if(PLAY_BEGIN.equals(state)) {
+                toggleReadyToPlay(BLUE);
+                toggleReadyToPlay(RED);
+            }
+        }
     }
 
     @Override
@@ -191,21 +209,26 @@ public class PeckingManager extends GameManager implements PeckingConstants,
             return;
         }
         for(PeckingPiece movedPiece : movedPieces) {
-            if(movedPiece.owner == RED || movedPiece.revealed) {
-                redPieces.updatePieces(movedPiece);
-            } else {
-                redPieces.updatePieces(movedPiece.copyWithoutRank());
-            }
-            if(movedPiece.owner == BLUE || movedPiece.revealed) {
-                bluePieces.updatePieces(movedPiece);
-            } else {
-                bluePieces.updatePieces(movedPiece.copyWithoutRank());
-            }
-            localPieces.updatePieces(movedPiece);
+            movePiece(movedPiece);
         }
         if(_gameobj.phase == PLAY) {
             _turndel.endTurn();
         }
+    }
+
+    private void movePiece(PeckingPiece movedPiece)
+    {
+        if(movedPiece.owner == RED || movedPiece.revealed) {
+            redPieces.updatePieces(movedPiece);
+        } else {
+            redPieces.updatePieces(movedPiece.copyWithoutRank());
+        }
+        if(movedPiece.owner == BLUE || movedPiece.revealed) {
+            bluePieces.updatePieces(movedPiece);
+        } else {
+            bluePieces.updatePieces(movedPiece.copyWithoutRank());
+        }
+        localPieces.updatePieces(movedPiece);
     }
 
     public void toggleReadyToPlay(BodyObject player)
@@ -240,4 +263,12 @@ public class PeckingManager extends GameManager implements PeckingConstants,
 
     /** Handles our turn based game flow. */
     protected TurnGameManagerDelegate _turndel;
+
+    private static final String INITIAL_GAME_STATE = "initial_game_state";
+
+    private static final String SETUP_END = "setup_end";
+
+    private static final String PLAY_BEGIN = "play_begin";
+
+    private static final String RIGHT_BEFORE_PLAY_END = "right_before_play_end";
 }
