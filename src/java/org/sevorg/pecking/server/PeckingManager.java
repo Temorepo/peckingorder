@@ -91,16 +91,20 @@ public class PeckingManager extends GameManager implements PeckingConstants,
         for(int i = 0; i < defaultPieces.length; i++) {
             unused.add(i);
         }
-        // int redCount = 0, blueCount = 0;
+        int redCount = 0, blueCount = 0;
         for(int i = 0; i < defaultPieces.length; i++) {
             defaultPieces[i].revealed = false;
-            // if(defaultPieces[i].owner == RED) {
-            // defaultPieces[i].x = redCount % 10;
-            // defaultPieces[i].y = redCount++ / 10;
-            // } else {
-            // defaultPieces[i].x = blueCount % 10;
-            // defaultPieces[i].y = 9 - blueCount++ / 10;
-            // }
+            if(defaultPieces[i].owner == BLUE) {
+                if(blueCount < 39) {
+                    defaultPieces[i].x = blueCount % 10;
+                    defaultPieces[i].y = blueCount++ / 10;
+                }
+            } else {
+                if(redCount < 39) {
+                    defaultPieces[i].x = redCount % 10;
+                    defaultPieces[i].y = 9 - redCount++ / 10;
+                }
+            }
             // Give each piece a distinct, random id
             // The id can't just be the array index(or any other constant
             // assignment) as that would allow a cheating client to figure out
@@ -206,20 +210,23 @@ public class PeckingManager extends GameManager implements PeckingConstants,
 
     public void toggleReadyToPlay(BodyObject player)
     {
-        if(_playerOids[BLUE] == player.getOid()) {
-            readyToPlay[BLUE] = !readyToPlay[BLUE];
-        } else if(_playerOids[RED] == player.getOid()) {
-            readyToPlay[RED] = !readyToPlay[RED];
+        toggleReadyToPlay(player.getOid());
+    }
+
+    private void toggleReadyToPlay(int playerOid)
+    {
+        if(_playerOids[BLUE] == playerOid) {
+            _gameobj.setReadyToPlayAt(!_gameobj.readyToPlay[BLUE], BLUE);
+        } else if(_playerOids[RED] == playerOid) {
+            _gameobj.setReadyToPlayAt(!_gameobj.readyToPlay[RED], RED);
         }
-        for(boolean ready : readyToPlay) {
+        for(boolean ready : _gameobj.readyToPlay) {
             if(!ready) {
                 return;
             }
         }
         _gameobj.setPhase(PLAY);
     }
-
-    private boolean[] readyToPlay = new boolean[2];
 
     private PeckingPiecesObject redPieces = new PeckingPiecesObject(),
             bluePieces = new PeckingPiecesObject(),

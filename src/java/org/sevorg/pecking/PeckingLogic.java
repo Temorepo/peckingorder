@@ -12,7 +12,6 @@ public abstract class PeckingLogic implements PeckingConstants
     {
         this._pieces = pieces;
     }
-    
 
     public abstract List<Point> getLegalMoves(PeckingPiece p);
 
@@ -27,14 +26,23 @@ public abstract class PeckingLogic implements PeckingConstants
     }
 
     /**
+     * @return - true if all pieces of the given color are on the board
+     */
+    public boolean allOnBoard(int color)
+    {
+        for(PeckingPiece p : _pieces) {
+            if(p.owner == color && isOffBoard(p)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * @return - an array containing the pieces that would change if src moved
-     *         to x, y It can be a single piece if x, y is unoccupied or if the
-     *         piece at x, y defeats src. If the piece at x, y is defeated by
-     *         src, two pieces are returned. If this move is illegal, an array
-     *         of length 0 is returned
+     *         to x, y
      */
     public abstract PeckingPiece[] move(PeckingPiece src, int x, int y);
-
 
     public static boolean isInLake(int x, int y)
     {

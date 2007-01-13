@@ -50,6 +50,14 @@ public class PeckingPanel extends PlacePanel implements PeckingConstants
         sidePanel.add(vlabel, GroupLayout.FIXED);
         // a score display or other useful status indicators can go here
         // add a chat box
+        sidePanel.add(new ReadyCheckBox(msgs.get("m.player_ready"),
+                                            ctx,
+                                            ctrl,
+                                            true));
+        sidePanel.add(new ReadyCheckBox(msgs.get("m.other_ready"),
+                                            ctx,
+                                            ctrl,
+                                            false));
         sidePanel.add(new ChatPanel(ctx));
         // add a "back to lobby" button
         JButton back = PeckingController.createActionButton(msgs.get("m.back_to_lobby"),

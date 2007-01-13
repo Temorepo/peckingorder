@@ -65,6 +65,9 @@ public class PeckingController extends GameController implements
 
     public int getColor()
     {
+        if(_color == COLOR_UNKNOWN){
+            throw new IllegalStateException("The color isn't available until willEnterPlace has been called");
+        }
         return _color;
     }
 
@@ -227,7 +230,9 @@ public class PeckingController extends GameController implements
 
     private PeckingPiecesObject _pieces;
 
-    private int _color;
+    private static final int COLOR_UNKNOWN = -3;
+    
+    private int _color = COLOR_UNKNOWN;
 
     private PeckingPiece selectedPiece;
 
