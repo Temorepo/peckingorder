@@ -74,15 +74,22 @@ public class ReadyCheckBox extends JCheckBox implements PlaceView,
     }
 
     public void entryAdded(EntryAddedEvent event)
-    {}
+    {
+        entryChanged(event.getName());
+    }
 
     public void entryRemoved(EntryRemovedEvent event)
     {}
 
     public void entryUpdated(EntryUpdatedEvent event)
     {
+        entryChanged(event.getName());
+    }
+
+    private void entryChanged(String eventName)
+    {
         if(_gameobj.phase == SETUP && _forLocalPlayer
-                && event.getName().equals(PeckingPiecesObject.PIECES)) {
+                && eventName.equals(PeckingPiecesObject.PIECES)) {
             setEnabled(_ctrl.createLogic().allOnBoard(_color));
         }
     }
