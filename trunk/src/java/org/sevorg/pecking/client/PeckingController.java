@@ -221,21 +221,6 @@ public class PeckingController extends GameController implements
         listeners.remove(listener);
     }
 
-    private List<PieceSelectedListener> listeners = new ArrayList<PieceSelectedListener>();
-
-    private Set<SetListener> peckingPiecesListeners = new HashSet<SetListener>();
-
-    /** Our game distributed object. */
-    private PeckingObject _gameobj;
-
-    private PeckingPiecesObject _pieces;
-
-    private static final int COLOR_UNKNOWN = -3;
-    
-    private int _color = COLOR_UNKNOWN;
-
-    private PeckingPiece selectedPiece;
-
     public void entryAdded(EntryAddedEvent event)
     {}
 
@@ -250,4 +235,19 @@ public class PeckingController extends GameController implements
             }
         }
     }
+
+    private List<PieceSelectedListener> listeners = new ArrayList<PieceSelectedListener>();
+
+    private Set<SetListener> peckingPiecesListeners = new HashSet<SetListener>();
+
+    /** Our game distributed object. */
+    private PeckingObject _gameobj;
+
+    private PeckingPiecesObject _pieces;
+
+    private static final int COLOR_UNKNOWN = -3;
+    
+    private int _color = COLOR_UNKNOWN;
+
+    private PeckingPiece selectedPiece;
 }
