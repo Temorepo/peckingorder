@@ -35,10 +35,9 @@ public class PeckingSetupLogic extends PeckingLogic
 
     /**
      * @return - an array containing the pieces that would change if src moved
-     *         to x, y It can be a single piece if x, y is unoccupied or if the
-     *         piece at x, y defeats src. If the piece at x, y is defeated by
-     *         src, two pieces are returned. If this move is illegal, an array
-     *         of length 0 is returned
+     *         to x, y It can be a single piece if x, y is unoccupied. If
+     *         there's a piece at x, y, two pieces are returned. If this move is
+     *         illegal, an array of length 0 is returned
      */
     public PeckingPiece[] move(PeckingPiece src, int x, int y)
     {

@@ -76,6 +76,7 @@ public class PeckingBoardView extends MediaPanel implements PlaceView,
 
     private void setPhase(int newPhase)
     {
+        System.out.println("PHASE CHANGE");
         phase = newPhase;
         if(phaseMouseListener != null) {
             removeMouseListener(phaseMouseListener);
@@ -198,6 +199,11 @@ public class PeckingBoardView extends MediaPanel implements PlaceView,
         }
     }
 
+    public void selectionChanged(PeckingPiece changedPiece, boolean newValue)
+    {
+        getRegionManager().invalidateRegion(getBounds());
+    }
+
     protected void paintInFront(Graphics2D gfx, Rectangle dirtyRect)
     {
         // Draw lakes in the middle of the board
@@ -261,9 +267,4 @@ public class PeckingBoardView extends MediaPanel implements PlaceView,
     private static final BasicStroke FAT_STROKE = new BasicStroke(5);
 
     private MouseListener phaseMouseListener;
-
-    public void selectionChanged(PeckingPiece changedPiece, boolean newValue)
-    {
-        getRegionManager().invalidateRegion(getBounds());
-    }
 }

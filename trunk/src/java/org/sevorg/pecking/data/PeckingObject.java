@@ -20,6 +20,9 @@ public class PeckingObject extends GameObject implements TurnGameObject,
 
     /** The field name of the <code>phase</code> field. */
     public static final String PHASE = "phase";
+
+    /** The field name of the <code>readyToPlay</code> field. */
+    public static final String READY_TO_PLAY = "readyToPlay";
     // AUTO-GENERATED: FIELDS END
 
     // from interface TurnGameObject
@@ -45,6 +48,11 @@ public class PeckingObject extends GameObject implements TurnGameObject,
     
     /** The current phase of the game.  Can be PLAY or SETUP. */
     public int phase;
+    
+    /** 
+     * If a player is ready to play, ie move from SETUP to PLAY
+     */
+    public boolean[] readyToPlay = new boolean[]{false, false};
 
     // AUTO-GENERATED: METHODS START
     /**
@@ -77,6 +85,39 @@ public class PeckingObject extends GameObject implements TurnGameObject,
         requestAttributeChange(
             PHASE, Integer.valueOf(value), Integer.valueOf(ovalue));
         this.phase = value;
+    }
+
+    /**
+     * Requests that the <code>readyToPlay</code> field be set to the
+     * specified value. The local value will be updated immediately and an
+     * event will be propagated through the system to notify all listeners
+     * that the attribute did change. Proxied copies of this object (on
+     * clients) will apply the value change when they received the
+     * attribute changed notification.
+     */
+    public void setReadyToPlay (boolean[] value)
+    {
+        boolean[] ovalue = this.readyToPlay;
+        requestAttributeChange(
+            READY_TO_PLAY, value, ovalue);
+        this.readyToPlay = (value == null) ? null : (boolean[])value.clone();
+    }
+
+    /**
+     * Requests that the <code>index</code>th element of
+     * <code>readyToPlay</code> field be set to the specified value.
+     * The local value will be updated immediately and an event will be
+     * propagated through the system to notify all listeners that the
+     * attribute did change. Proxied copies of this object (on clients)
+     * will apply the value change when they received the attribute
+     * changed notification.
+     */
+    public void setReadyToPlayAt (boolean value, int index)
+    {
+        boolean ovalue = this.readyToPlay[index];
+        requestElementUpdate(
+            READY_TO_PLAY, index, Boolean.valueOf(value), Boolean.valueOf(ovalue));
+        this.readyToPlay[index] = value;
     }
     // AUTO-GENERATED: METHODS END
 }

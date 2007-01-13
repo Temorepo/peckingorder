@@ -118,9 +118,6 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
             } else if(unrevealedPieces.contains(piece)) {
                 unrevealedPieces.remove(piece);
                 removeSprite(unrevealedSprites.remove(unrevealedSprites.size() - 1));
-                if(unrevealedPieces.size() == 0) {
-                    _ctrl.setReadyToPlay();
-                }
             }
         }
 
