@@ -3,6 +3,7 @@
 
   <property name="app.name" value="pecking"/>
   <property name="src.dir" value="src/java"/>
+  <property name="resource.dir" value="src/resources"/>
   <property name="deploy.dir" value="dist"/>
 
   <!-- declare our classpath -->
@@ -48,9 +49,8 @@
   <target name="prepare">
     <mkdir dir="${deploy.dir}"/>
     <mkdir dir="${deploy.dir}/classes"/>
-    <mkdir dir="${deploy.dir}/classes/rsrc"/>
-    <copy todir="${deploy.dir}/classes/rsrc">
-      <fileset dir="rsrc" includes="**/*"/>
+    <copy todir="${deploy.dir}/classes">
+      <fileset dir="${resource.dir}" includes="**/*"/>
     </copy>
   </target>
 
