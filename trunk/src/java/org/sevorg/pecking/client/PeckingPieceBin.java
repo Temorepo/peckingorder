@@ -29,7 +29,7 @@ import com.threerings.presents.dobj.SetListener;
 import com.threerings.toybox.util.ToyBoxContext;
 
 public class PeckingPieceBin extends MediaPanel implements SetListener,
-        PeckingConstants, PlaceView
+        PeckingConstants, PlaceView, AttributeChangeListener
 {
 
     public PeckingPieceBin(ToyBoxContext ctx,
@@ -40,7 +40,7 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
         _ctx = ctx;
         _ctrl = ctrl;
         _ctrl.addPeckingPiecesListener(this);
-        owner = binOwner;
+        binColor = binOwner;
     }
 
     public void didLeavePlace(PlaceObject plobj)
@@ -48,11 +48,26 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
 
     public void willEnterPlace(PlaceObject plobj)
     {
-        int color = ((PeckingObject)plobj).getPlayerIndex(((ToyBoxContext)_ctx).getUsername());
-        if(color == owner) {
-            layout = new RevealedPieceLayout(plobj);
+        _gameobj = (PeckingObject)plobj;
+        _gameobj.addListener(this);
+        playerColor = ((PeckingObject)_gameobj).getPlayerIndex(((ToyBoxContext)_ctx).getUsername());
+        setLayout();
+    }
+
+    private void setLayout()
+    {
+        if(layout != null && layout instanceof MouseListener) {
+            removeMouseListener((MouseListener)layout);
+        }
+        if(_gameobj.phase == SETUP) {
+            if(playerColor != binColor) {
+                layout = new HiddenPieceLayout();
+            } else {
+                layout = new RevealedPieceLayout(_gameobj);
+                addMouseListener((MouseListener)layout);
+            }
         } else {
-            layout = new HiddenPieceLayout();
+            layout = new RevealedPieceLayout(_gameobj);
         }
     }
 
@@ -72,6 +87,13 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
         // fill in our background color
         gfx.setColor(Color.WHITE);
         gfx.fill(dirtyRect);
+    }
+
+    public void attributeChanged(AttributeChangedEvent event)
+    {
+        if(event.getName().equals(PeckingObject.PHASE)) {
+            setLayout();
+        }
     }
 
     public void entryAdded(EntryAddedEvent event)
@@ -126,30 +148,26 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
         private Set<PeckingPiece> unrevealedPieces = new HashSet<PeckingPiece>();
     }
 
-    class RevealedPieceLayout implements PieceLayout, PieceSelectedListener,
-            AttributeChangeListener
+    class RevealedPieceLayout extends MouseAdapter implements PieceLayout,
+            PieceSelectedListener
     {
 
-        private final class RevealedBinMouseAdapter extends MouseAdapter
+        public void mousePressed(MouseEvent e)
         {
-
-            public void mousePressed(MouseEvent e)
-            {
-                if(_ctrl.getSelectedPiece() != null
-                        && !PeckingLogic.isOffBoard(_ctrl.getSelectedPiece())) {
-                    _ctrl.moveSelected(OFF_BOARD, OFF_BOARD);
-                }
-                int clickRow = e.getY() / PieceSprite.SIZE;
-                int lastFilled = findLastFilledSlot(clickRow);
-                if(lastFilled != -1
-                        && e.getX() <= pieces[clickRow][lastFilled].getX()
-                                + PieceSprite.SIZE) {
-                    _ctrl.setSelectedPiece(pieces[clickRow][lastFilled]._piece);
-                } else if(clickRow == MARSHALL_ROW || clickRow == WORM_ROW) {
-                    if(pieces[clickRow][LAST_COLUMN] != null
-                            && e.getX() >= pieces[clickRow][LAST_COLUMN].getX()) {
-                        _ctrl.setSelectedPiece(pieces[clickRow][LAST_COLUMN]._piece);
-                    }
+            if(_ctrl.getSelectedPiece() != null
+                    && !PeckingLogic.isOffBoard(_ctrl.getSelectedPiece())) {
+                _ctrl.moveSelected(OFF_BOARD, OFF_BOARD);
+            }
+            int clickRow = e.getY() / PieceSprite.SIZE;
+            int lastFilled = findLastFilledSlot(clickRow);
+            if(lastFilled != -1
+                    && e.getX() <= pieces[clickRow][lastFilled].getX()
+                            + PieceSprite.SIZE) {
+                _ctrl.setSelectedPiece(pieces[clickRow][lastFilled]._piece);
+            } else if(clickRow == MARSHALL_ROW || clickRow == WORM_ROW) {
+                if(pieces[clickRow][LAST_COLUMN] != null
+                        && e.getX() >= pieces[clickRow][LAST_COLUMN].getX()) {
+                    _ctrl.setSelectedPiece(pieces[clickRow][LAST_COLUMN]._piece);
                 }
             }
         }
@@ -157,26 +175,6 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
         public RevealedPieceLayout(PlaceObject plobj)
         {
             _ctrl.addPieceSelectedListener(this);
-            plobj.addListener(this);
-            addBinMouseListener();
-        }
-
-        public void attributeChanged(AttributeChangedEvent event)
-        {
-            if(event.getName().equals(PeckingObject.PHASE)) {
-                if(event.getIntValue() == PeckingConstants.PLAY) {
-                    removeMouseListener(listener);
-                    listener = null;
-                } else if(listener != null) {
-                    addBinMouseListener();
-                }
-            }
-        }
-
-        private void addBinMouseListener()
-        {
-            listener = new RevealedBinMouseAdapter();
-            addMouseListener(listener);
         }
 
         public void selectionChanged(PeckingPiece changedPiece, boolean newValue)
@@ -184,8 +182,7 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
             Point coords = findSprite(changedPiece);
             if(coords != null) {
                 PieceSprite sprite = pieces[coords.y][coords.x];
-                sprite.selected = newValue;
-                sprite.invalidate();
+                sprite.setSelected(newValue);
             }
         }
 
@@ -269,7 +266,7 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
             sprite.setRenderOrder(column);
             pieces[row][column] = sprite;
             addSprite(sprite);
-            if(listener != null) {
+            if(_gameobj.phase == SETUP) {
                 _ctrl.setSelectedPiece(piece);
             }
         }
@@ -279,17 +276,17 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
         private int MARSHALL_ROW = 0, WORM_ROW = 8;
 
         private PieceSprite[][] pieces = new PieceSprite[10][8];
-
-        private MouseListener listener;
     }
 
     private void pieceUpdated(PeckingPiece piece)
     {
-        if(piece.owner != owner) {
+        if(piece.owner != binColor) {
             return;
         }
         layout.update(piece);
     }
+
+    private PeckingObject _gameobj;
 
     private PieceLayout layout;
 
@@ -297,7 +294,7 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
 
     private PeckingController _ctrl;
 
-    private int owner;
+    private int binColor, playerColor;
 
     private static final double X_SHIFT = PieceSprite.SIZE * .2;
 }

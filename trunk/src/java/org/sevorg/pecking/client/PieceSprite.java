@@ -16,24 +16,31 @@ public class PieceSprite extends Sprite implements PeckingConstants
     {
         super(SIZE, SIZE);
     }
-    
-    public PieceSprite(PeckingPiece piece, int x, int y){
+
+    public PieceSprite(PeckingPiece piece, int x, int y)
+    {
         this();
-        setLocation(x, y);
-        update(piece);
+        update(piece, x, y);
     }
 
     /** The dimensions of our sprite in pixels. */
     public static final int SIZE = 48;
+
+    public void setSelected(boolean newValue)
+    {
+        selected = newValue;
+        invalidate();
+    }
 
     /**
      * Called when the piece we are displaying has changed.
      * 
      * @param piece
      */
-    public void update(PeckingPiece piece)
+    public void update(PeckingPiece piece, int x, int y)
     {
         _piece = piece;
+        setLocation(x, y);
         invalidate();
     }
 
@@ -77,7 +84,7 @@ public class PieceSprite extends Sprite implements PeckingConstants
                        _bounds.y + _bounds.height / 2 + bounds.height / 2);
     }
 
-    public boolean selected = false;
+    private boolean selected = false;
 
     protected PeckingPiece _piece;
 }
