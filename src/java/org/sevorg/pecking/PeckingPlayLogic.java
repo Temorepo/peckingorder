@@ -21,13 +21,13 @@ public class PeckingPlayLogic extends PeckingLogic
         // either he can move, or both he and his opponent can't move which is a
         // draw
         return !isWormOffBoard(owner)
-                && (isWormOffBoard(other) || hasLegalMoves(owner) || !hasLegalMoves(other));
+                && (isWormOffBoard(other) || (hasLegalMoves(owner)
+                        && !hasLegalMoves(other)) || isWormCageProtected(owner));
     }
 
     public boolean shouldEndGame()
     {
-        return isWormOffBoard(RED) || isWormOffBoard(BLUE)
-                || !hasLegalMoves(RED) || !hasLegalMoves(BLUE);
+        return isWinner(RED) || isWinner(BLUE) || (!hasLegalMoves(RED) && !hasLegalMoves(BLUE));
     }
 
     public boolean isWormOffBoard(int owner)
@@ -38,6 +38,38 @@ public class PeckingPlayLogic extends PeckingLogic
             }
         }
         return false;
+    }
+
+    /**
+     * @return - true if owner's worm is surrounded by cages or the board edge,
+     *         and the other player has no CAGE_OPENERS
+     */
+    public boolean isWormCageProtected(int owner)
+    {
+        PeckingPiece worm = null;
+        for(PeckingPiece p : _pieces) {
+            if(p.rank == WORM && p.owner == owner) {
+                worm = p;
+            } else if(p.rank == CAGE_OPENER && p.owner != owner) {
+                return false;
+            }
+        }
+        if(isOffBoard(worm)) {
+            return false;
+        }
+        int[][] surroundingPoints = getSurroundingPoints(worm);
+        for(int[] point : surroundingPoints) {
+            if(isOffBoard(point[0], point[1])) {
+                // If a surrounding point is off the board, then the worm is
+                // protected by the board edge
+                continue;
+            }
+            PeckingPiece pointPiece = getPieceAt(point[0], point[1]);
+            if(pointPiece == null || pointPiece.rank != CAGE) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public boolean hasLegalMoves(int owner)
@@ -65,10 +97,7 @@ public class PeckingPlayLogic extends PeckingLogic
             y = p.y;
             while(addIfLegalAndCanContinue(p, x, --y, points)) {}
         } else {
-            int[][] cardinalPoints = new int[][] { {p.x + 1, p.y},
-                                                  {p.x - 1, p.y},
-                                                  {p.x, p.y + 1},
-                                                  {p.x, p.y - 1}};
+            int[][] cardinalPoints = getSurroundingPoints(p);
             for(int[] point : cardinalPoints) {
                 if(isLegal(p, point[0], point[1])) {
                     points.add(new Point(point[0], point[1]));
@@ -76,6 +105,14 @@ public class PeckingPlayLogic extends PeckingLogic
             }
         }
         return points;
+    }
+
+    private int[][] getSurroundingPoints(PeckingPiece p)
+    {
+        return new int[][] { {p.x + 1, p.y},
+                            {p.x - 1, p.y},
+                            {p.x, p.y + 1},
+                            {p.x, p.y - 1}};
     }
 
     private boolean addIfLegalAndCanContinue(PeckingPiece pie,
@@ -104,7 +141,6 @@ public class PeckingPlayLogic extends PeckingLogic
     {
         return piece.rank == WORM || piece.rank == CAGE;
     }
-
 
     /**
      * @return - an array containing the pieces that would change if src moved
@@ -146,6 +182,7 @@ public class PeckingPlayLogic extends PeckingLogic
             return new PeckingPiece[] {src.copyOffBoard()};
         }
     }
+
     /**
      * return - an array of length 2 with the piece src at the position of the
      * piece at dest and dest off the board
