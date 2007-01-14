@@ -23,8 +23,8 @@ public class PeckingPlayLogicTest extends TestCase implements PeckingConstants
         pieces.addPiece(RED, WORM, 0, 1);
         pieces.removePiece(originScout);
         assertTrue(logic.shouldEndGame());
-        assertFalse(logic.isWinner(BLUE));
-        assertFalse(logic.isWinner(RED));
+        assertTrue(logic.isWinner(BLUE));
+        assertTrue(logic.isWinner(RED));
     }
 
     public void testCageProtectedWinner()
