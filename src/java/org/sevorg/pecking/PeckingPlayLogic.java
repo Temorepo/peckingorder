@@ -16,18 +16,18 @@ public class PeckingPlayLogic extends PeckingLogic
 
     public boolean isWinner(int owner)
     {
+        // A player is a winner if his opponents worm is off the board,
+        // he can move while his opponent can't, or if his worm is unassailable
+        // due to cages and an opponents lack of cage openers. If both he and
+        // his opponent can't move, it's a draw so true is returned.
         int other = owner == RED ? BLUE : RED;
-        // A player is a winner if his opponents worm is off the board or
-        // either he can move, or both he and his opponent can't move which is a
-        // draw
         return !isWormOffBoard(owner)
-                && (isWormOffBoard(other) || (hasLegalMoves(owner)
-                        && !hasLegalMoves(other)) || isWormCageProtected(owner));
+                && (isWormOffBoard(other) || !hasLegalMoves(other) || isWormCageProtected(owner));
     }
 
     public boolean shouldEndGame()
     {
-        return isWinner(RED) || isWinner(BLUE) || (!hasLegalMoves(RED) && !hasLegalMoves(BLUE));
+        return isWinner(RED) || isWinner(BLUE);
     }
 
     public boolean isWormOffBoard(int owner)
