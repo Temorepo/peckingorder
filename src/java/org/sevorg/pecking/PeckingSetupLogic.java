@@ -49,10 +49,11 @@ public class PeckingSetupLogic extends PeckingLogic
         }
         PeckingPiece dest = getPieceAt(x, y);
         if(dest == null) {
-            // Simplest case, we're moving to an empty dest
+            // Simplest case, we're moving to an empty dest, so just move src there
             return new PeckingPiece[] {src.copyWithNewPosition(x, y)};
         }
+        // Otherwise, swap src and dest
         return new PeckingPiece[] {src.copyWithNewPosition(x, y),
-                                   dest.copyOffBoard(false)};
+                                   dest.copyWithNewPosition(src.x, src.y)};
     }
 }
