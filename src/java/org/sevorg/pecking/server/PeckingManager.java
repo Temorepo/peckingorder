@@ -177,8 +177,9 @@ public class PeckingManager extends GameManager implements PeckingConstants,
                     movePiece(p.copyRevealed());
                 }
             }
-        }else if(state != null && !state.equals("${state}")){
-            System.err.println("Received unrecognized initial state '" + state + "' in system property '" + INITIAL_GAME_STATE + "'");
+        } else if(state != null && !state.equals("${state}")) {
+            System.err.println("Received unrecognized initial state '" + state
+                    + "' in system property '" + INITIAL_GAME_STATE + "'");
         }
         if(PLAY_BEGIN.equals(state) || NEAR_DRAW.equals(state)) {
             toggleReadyToPlay(BLUE);
@@ -195,6 +196,20 @@ public class PeckingManager extends GameManager implements PeckingConstants,
         // manager a call to endGame() should be made when the manager knows
         // the game to be over and that will trigger the end-of-game processing
         // including calling this method
+        revealAllPieces();
+    }
+
+    private void revealAllPieces()
+    {
+        for(PeckingPiece piece : localPieces.pieces) {
+            if(piece.revealed == false) {
+                if(piece.owner == BLUE) {
+                    redPieces.updatePieces(piece.copyRevealed());
+                } else {
+                    bluePieces.updatePieces(piece.copyRevealed());
+                }
+            }
+        }
     }
 
     @Override
