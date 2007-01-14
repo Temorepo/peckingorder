@@ -95,6 +95,7 @@ public class PeckingController extends GameController implements
         super.gameDidStart();
         // here we can set up anything that should happen at the start of the
         // game
+        
     }
 
     @Override
