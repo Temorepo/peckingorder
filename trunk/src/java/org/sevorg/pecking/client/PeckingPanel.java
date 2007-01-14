@@ -3,14 +3,21 @@ package org.sevorg.pecking.client;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.Polygon;
+import java.awt.geom.Rectangle2D;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
+import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import org.sevorg.pecking.PeckingConstants;
+import org.sevorg.pecking.data.PeckingObject;
 import com.samskivert.swing.GroupLayout;
+import com.samskivert.swing.ShapeIcon;
 import com.threerings.crowd.client.PlacePanel;
+import com.threerings.parlor.turn.client.TurnDisplay;
+import com.threerings.presents.dobj.AttributeChangedEvent;
 import com.threerings.toybox.client.ChatPanel;
 import com.threerings.toybox.util.ToyBoxContext;
 import com.threerings.util.MessageBundle;
@@ -48,16 +55,46 @@ public class PeckingPanel extends PlacePanel implements PeckingConstants
         vlabel.setFont(new Font("Helvetica", Font.BOLD, 24));
         vlabel.setForeground(Color.black);
         sidePanel.add(vlabel, GroupLayout.FIXED);
-        // a score display or other useful status indicators can go here
-        // add a chat box
+        // add a standard turn display that only displays an indicator during
+        // the PLAY phase
+        TurnDisplay turnDisplay = new TurnDisplay() {
+
+            public void attributeChanged(AttributeChangedEvent event)
+            {
+                if(event.getName().equals(PeckingObject.PHASE)) {
+                    if(event.getIntValue() == SETUP) {
+                        setTurnIcon(null);
+                    } else {
+                        Polygon triangle = new Polygon(new int[] {0, 12, 0},
+                                                       new int[] {0, 6, 12},
+                                                       3);
+                        setTurnIcon(new ShapeIcon(triangle, Color.BLACK, null));
+                    }
+                } else {
+                    super.attributeChanged(event);
+                }
+            }
+        };
+        turnDisplay.setOpaque(false);
+        turnDisplay.setWinnerText(ctx.xlate("pecking", "m.winner"));
+        turnDisplay.setDrawText(ctx.xlate("pecking", "m.draw"));
+        Rectangle2D square = new Rectangle2D.Float(0, 0, 12, 12);
+        turnDisplay.setPlayerIcons(new Icon[] {new ShapeIcon(square,
+                                                             Color.RED,
+                                                             null),
+                                               new ShapeIcon(square,
+                                                             Color.BLUE,
+                                                             null)});
+        sidePanel.add(turnDisplay, GroupLayout.FIXED);
+        // Add controls to indicate when a player is done with setup
         sidePanel.add(new ReadyCheckBox(msgs.get("m.player_ready"),
-                                            ctx,
-                                            ctrl,
-                                            true));
+                                        ctx,
+                                        ctrl,
+                                        true), GroupLayout.FIXED);
         sidePanel.add(new ReadyCheckBox(msgs.get("m.other_ready"),
-                                            ctx,
-                                            ctrl,
-                                            false));
+                                        ctx,
+                                        ctrl,
+                                        false), GroupLayout.FIXED);
         sidePanel.add(new ChatPanel(ctx));
         // add a "back to lobby" button
         JButton back = PeckingController.createActionButton(msgs.get("m.back_to_lobby"),
