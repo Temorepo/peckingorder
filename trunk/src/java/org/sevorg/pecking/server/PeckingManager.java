@@ -125,24 +125,62 @@ public class PeckingManager extends GameManager implements PeckingConstants,
     private void setupInitialGameState()
     {
         String state = System.getProperty(INITIAL_GAME_STATE);
-        if(RIGHT_BEFORE_PLAY_END.equals(state)) {} else if(PLAY_BEGIN.equals(state)
-                || SETUP_END.equals(state)) {
+        PeckingPiece[] pieces = localPieces.pieces.toArray(new PeckingPiece[80]);
+        if(PLAY_BEGIN.equals(state) || SETUP_END.equals(state)) {
             int redCount = 0, blueCount = 0;
-            
-            PeckingPiece[] pieces = localPieces.pieces.toArray(new PeckingPiece[80]);
+            // Position these scouts and the worm specifically so the game can
+            // be won in one move by either player
+            PeckingPiece redScout = null, blueScout = null, redWorm = null, blueWorm = null;
             for(PeckingPiece p : pieces) {
                 if(p.owner == BLUE) {
-                    movePiece(p.copyWithNewPosition(blueCount % 10,
-                                                    blueCount++ / 10));
+                    if(p.rank == SCOUT && blueScout == null) {
+                        blueScout = p;
+                    } else if(p.rank == WORM && blueWorm == null) {
+                        blueWorm = p;
+                    } else {
+                        movePiece(p.copyWithNewPosition(blueCount % 10,
+                                                        blueCount++ / 10));
+                    }
                 } else {
-                    movePiece(p.copyWithNewPosition(redCount % 10,
-                                                    9 - redCount++ / 10));
+                    if(p.rank == SCOUT && redScout == null) {
+                        redScout = p;
+                    } else if(p.rank == WORM && redWorm == null) {
+                        redWorm = p;
+                    } else {
+                        movePiece(p.copyWithNewPosition(redCount % 10,
+                                                        9 - redCount++ / 10));
+                    }
                 }
             }
-            if(PLAY_BEGIN.equals(state)) {
-                toggleReadyToPlay(BLUE);
-                toggleReadyToPlay(RED);
+            movePiece(redScout.copyWithNewPosition(8, 6));
+            movePiece(redWorm.copyWithNewPosition(9, 6));
+            movePiece(blueScout.copyWithNewPosition(9, 3));
+            movePiece(blueWorm.copyWithNewPosition(8, 3));
+        } else if(NEAR_DRAW.equals(state)) {
+            for(PeckingPiece p : pieces) {
+                if(p.rank == WORM) {
+                    if(p.owner == RED) {
+                        movePiece(p.copyWithNewPosition(0, 9));
+                    } else {
+                        movePiece(p.copyWithNewPosition(0, 0));
+                    }
+                } else if(p.rank == MARSHALL) {
+                    if(p.owner == RED) {
+                        movePiece(p.copyWithNewPosition(0, 2));
+                    } else {
+                        movePiece(p.copyWithNewPosition(0, 1));
+                    }
+                } else {
+                    // Need to reveal the pieces that are going to stay off
+                    // the board since they're going to be in a revealed
+                    // piece bin
+                    movePiece(p.copyRevealed());
+                }
             }
+        }
+        if(PLAY_BEGIN.equals(state) || NEAR_DRAW.equals(state)) {
+            toggleReadyToPlay(BLUE);
+            toggleReadyToPlay(RED);
         }
     }
 
@@ -163,9 +201,6 @@ public class PeckingManager extends GameManager implements PeckingConstants,
     {
         super.assignWinners(winners);
         PeckingPlayLogic logic = new PeckingPlayLogic(localPieces.pieces);
-        // A player is a winner if his opponents worm is off the board and
-        // either he can move, or both he and his opponent can't move which is a
-        // draw
         winners[RED] = logic.isWinner(RED);
         winners[BLUE] = logic.isWinner(BLUE);
     }
@@ -233,16 +268,13 @@ public class PeckingManager extends GameManager implements PeckingConstants,
 
     public void toggleReadyToPlay(BodyObject player)
     {
-        toggleReadyToPlay(player.getOid());
+        toggleReadyToPlay(_playerOids[BLUE] == player.getOid() ? BLUE : RED);
     }
 
-    private void toggleReadyToPlay(int playerOid)
+    private void toggleReadyToPlay(int readyToPlayIndex)
     {
-        if(_playerOids[BLUE] == playerOid) {
-            _gameobj.setReadyToPlayAt(!_gameobj.readyToPlay[BLUE], BLUE);
-        } else if(_playerOids[RED] == playerOid) {
-            _gameobj.setReadyToPlayAt(!_gameobj.readyToPlay[RED], RED);
-        }
+        _gameobj.setReadyToPlayAt(!_gameobj.readyToPlay[readyToPlayIndex],
+                                  readyToPlayIndex);
         for(boolean ready : _gameobj.readyToPlay) {
             if(!ready) {
                 return;
@@ -270,5 +302,5 @@ public class PeckingManager extends GameManager implements PeckingConstants,
 
     private static final String PLAY_BEGIN = "play_begin";
 
-    private static final String RIGHT_BEFORE_PLAY_END = "right_before_play_end";
+    private static final String NEAR_DRAW = "near_draw";
 }
