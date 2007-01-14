@@ -14,7 +14,6 @@ import org.sevorg.pecking.data.PeckingPiecesObject;
 import com.threerings.crowd.client.PlaceView;
 import com.threerings.crowd.data.PlaceObject;
 import com.threerings.crowd.util.CrowdContext;
-import com.threerings.parlor.card.Log;
 import com.threerings.parlor.game.client.GameController;
 import com.threerings.presents.dobj.EntryAddedEvent;
 import com.threerings.presents.dobj.EntryRemovedEvent;
@@ -51,7 +50,7 @@ public class PeckingController extends GameController implements
     {
         super.willEnterPlace(plobj);
         if(_ctx.getClient().getClientObject().receivers.containsKey(PeckingDecoder.RECEIVER_CODE)) {
-            Log.warning("Yuh oh, we already have a pecking  receiver registered and are trying for another...!");
+            System.err.println("Yuh oh, we already have a pecking receiver registered and are trying for another...!");
             Thread.dumpStack();
         }
         _ctx.getClient()
@@ -65,7 +64,7 @@ public class PeckingController extends GameController implements
 
     public int getColor()
     {
-        if(_color == COLOR_UNKNOWN){
+        if(_color == COLOR_UNKNOWN) {
             throw new IllegalStateException("The color isn't available until willEnterPlace has been called");
         }
         return _color;
@@ -78,7 +77,17 @@ public class PeckingController extends GameController implements
         super.didLeavePlace(plobj);
         // clear out our game object reference
         _gameobj = null;
-        clearPieces();
+        selectedPiece = null;
+        if(_pieces != null) {
+            for(SetListener listener : peckingPiecesListeners) {
+                _pieces.removeListener(listener);
+            }
+            _pieces.removeSubscriber(this);
+            _pieces = null;
+        }
+        _ctx.getClient()
+                .getInvocationDirector()
+                .unregisterReceiver(PeckingDecoder.RECEIVER_CODE);
     }
 
     @Override
@@ -95,7 +104,6 @@ public class PeckingController extends GameController implements
         super.gameDidStart();
         // here we can set up anything that should happen at the start of the
         // game
-        
     }
 
     @Override
@@ -105,20 +113,6 @@ public class PeckingController extends GameController implements
         super.gameDidEnd();
         // here we can clear out anything that needs to be cleared out at the
         // end of a game
-        // TODO - I was clearing out pieces at game end, but this is called when
-        // the game starts from what I can tell
-        // clearPieces();
-    }
-
-    private void clearPieces()
-    {
-        if(_pieces != null) {
-            for(SetListener listener : peckingPiecesListeners) {
-                _pieces.removeListener(listener);
-            }
-            _pieces.removeSubscriber(this);
-            _pieces = null;
-        }
     }
 
     public void setPeckingPiecesObjectOid(int oid)
@@ -247,7 +241,7 @@ public class PeckingController extends GameController implements
     private PeckingPiecesObject _pieces;
 
     private static final int COLOR_UNKNOWN = -3;
-    
+
     private int _color = COLOR_UNKNOWN;
 
     private PeckingPiece selectedPiece;
