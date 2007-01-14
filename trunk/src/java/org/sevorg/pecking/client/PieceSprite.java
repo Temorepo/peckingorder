@@ -68,9 +68,9 @@ public class PieceSprite extends Sprite implements PeckingConstants
         if(_piece.rank == UNKNOWN) {
             name = "";
         } else if(_piece.rank == CAGE) {
-            name = "C";
+            name = "B";
         } else if(_piece.rank == WORM) {
-            name = "W";
+            name = "F";
         } else if(_piece.rank == ASSASSIN) {
             name = "A";
         } else {
