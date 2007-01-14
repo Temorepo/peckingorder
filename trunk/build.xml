@@ -96,7 +96,7 @@
         <java classname="com.threerings.toybox.server.ToyBoxServer" fork="true">
             <jvmarg value="-Dgame_conf=${app.name}.xml"/>
             <classpath refid="classpath"/>
-            <sysproperty key="initial_game_state" value="${state}"/>
+            <sysproperty key="state" value="${state}"/>
         </java>
         <delete file="${deploy.dir}/classes/toybox.properties"/>
     </target>

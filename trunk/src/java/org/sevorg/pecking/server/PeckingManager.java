@@ -177,6 +177,8 @@ public class PeckingManager extends GameManager implements PeckingConstants,
                     movePiece(p.copyRevealed());
                 }
             }
+        }else if(state != null){
+            System.err.println("Received unrecognized initial state '" + state + "' in system property '" + INITIAL_GAME_STATE + "'");
         }
         if(PLAY_BEGIN.equals(state) || NEAR_DRAW.equals(state)) {
             toggleReadyToPlay(BLUE);
@@ -296,7 +298,7 @@ public class PeckingManager extends GameManager implements PeckingConstants,
     /** Handles our turn based game flow. */
     protected TurnGameManagerDelegate _turndel;
 
-    private static final String INITIAL_GAME_STATE = "initial_game_state";
+    private static final String INITIAL_GAME_STATE = "state";
 
     private static final String SETUP_END = "setup_end";
 
