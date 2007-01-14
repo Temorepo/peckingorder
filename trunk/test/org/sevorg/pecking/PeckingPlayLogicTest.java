@@ -21,9 +21,32 @@ public class PeckingPlayLogicTest extends TestCase implements PeckingConstants
     public void testImmobileDraw()
     {
         pieces.addPiece(RED, WORM, 0, 1);
+        pieces.removePiece(originScout);
         assertTrue(logic.shouldEndGame());
-        assertTrue(logic.isWinner(BLUE));
+        assertFalse(logic.isWinner(BLUE));
+        assertFalse(logic.isWinner(RED));
+    }
+
+    public void testCageProtectedWinner()
+    {
+        // Almost surround red worm with cages
+        pieces.addPiece(RED, WORM, 2, 2);
+        pieces.addPiece(RED, CAGE, 1, 2);
+        pieces.addPiece(RED, CAGE, 2, 1);
+        pieces.addPiece(RED, CAGE, 2, 3);
+        // Give blue a mobile piece so that doesn't cause a win
+        pieces.addPiece(BLUE, SCOUT, 3, 3);
+        assertFalse(logic.shouldEndGame());
+        // Finish surrounding the cage
+        pieces.addPiece(RED, CAGE, 3, 2);
+        assertTrue(logic.shouldEndGame());
         assertTrue(logic.isWinner(RED));
+        assertFalse(logic.isWinner(BLUE));
+        // Add a cage opener since that keeps having a surrounded worm a win
+        // condition
+        pieces.addPiece(BLUE, CAGE_OPENER, 8, 8);
+        assertFalse(logic.shouldEndGame());
+
     }
 
     public void testImmobileWithWinner()
@@ -134,11 +157,15 @@ public class PeckingPlayLogicTest extends TestCase implements PeckingConstants
 
         public PeckingPiece addPiece(int owner, int rank, int x, int y)
         {
-            // Set the pieces id to the size of the set. Should be unique as
-            // long as things aren't removed
+            // Set the pieces id to the size of the set. Should be fine as
+            // long as things aren't added after removePiece is called
             PeckingPiece p = new PeckingPiece(owner, rank, x, y, size());
             add(p);
             return p;
+        }
+        
+        public void removePiece(PeckingPiece piece){
+            remove(piece);
         }
     }
 
