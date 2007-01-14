@@ -177,7 +177,7 @@ public class PeckingManager extends GameManager implements PeckingConstants,
                     movePiece(p.copyRevealed());
                 }
             }
-        }else if(state != null){
+        }else if(state != null && !state.equals("${state}")){
             System.err.println("Received unrecognized initial state '" + state + "' in system property '" + INITIAL_GAME_STATE + "'");
         }
         if(PLAY_BEGIN.equals(state) || NEAR_DRAW.equals(state)) {
