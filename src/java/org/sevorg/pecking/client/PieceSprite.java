@@ -1,12 +1,13 @@
 package org.sevorg.pecking.client;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics2D;
-import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import org.sevorg.pecking.PeckingConstants;
 import org.sevorg.pecking.data.PeckingPiece;
+import com.samskivert.swing.Label;
 import com.threerings.media.sprite.Sprite;
 
 public class PieceSprite extends Sprite implements PeckingConstants
@@ -39,8 +40,29 @@ public class PieceSprite extends Sprite implements PeckingConstants
      */
     public void update(PeckingPiece piece, int x, int y)
     {
-        _piece = piece;
         setLocation(x, y);
+        update(piece);
+    }
+
+    public void update(PeckingPiece piece)
+    {
+        _piece = piece;
+        String name;
+        if(_piece.rank == CAGE) {
+            name = "B";
+        } else if(_piece.rank == WORM) {
+            name = "F";
+        } else if(_piece.rank == ASSASSIN) {
+            name = "A";
+        } else {
+            name = "" + _piece.rank;
+        }
+        if(_piece.rank != UNKNOWN
+                && (label == null || !label.getText().equals(name))) {
+            labelSize = null;
+            label = new Label(name);
+            label.setFont(new Font("Helvetica", Font.BOLD, 36));
+        }
         invalidate();
     }
 
@@ -58,31 +80,27 @@ public class PieceSprite extends Sprite implements PeckingConstants
         gfx.fillRect(px, py, pwid, phei);
         // then outline that rectangle in black
         if(selected) {
-            gfx.setColor(Color.yellow);
+            gfx.setColor(Color.YELLOW);
         } else {
-            gfx.setColor(Color.black);
+            gfx.setColor(Color.BLACK);
         }
         gfx.drawRect(px, py, pwid, phei);
-        gfx.setFont(new Font("Helvetica", Font.BOLD, 36));
-        String name;
-        if(_piece.rank == UNKNOWN) {
-            name = "";
-        } else if(_piece.rank == CAGE) {
-            name = "B";
-        } else if(_piece.rank == WORM) {
-            name = "F";
-        } else if(_piece.rank == ASSASSIN) {
-            name = "A";
-        } else {
-            name = "" + _piece.rank;
+        if(label != null) {
+            if(labelSize == null) {
+                label.layout(gfx);
+                labelSize = label.getSize();
+                labelX = _bounds.width / 2 - labelSize.width / 2;
+                labelY = _bounds.height / 2 - labelSize.height / 2;
+            }
+            label.render(gfx, _bounds.x + labelX, _bounds.y + labelY);
         }
-        Rectangle bounds = gfx.getFontMetrics()
-                .getStringBounds(name, gfx)
-                .getBounds();
-        gfx.drawString(name,
-                       _bounds.x + _bounds.width / 2 - bounds.width / 2,
-                       _bounds.y + _bounds.height / 2 + bounds.height / 2);
     }
+
+    private Dimension labelSize;
+
+    private int labelX, labelY;
+
+    private Label label;
 
     private boolean selected = false;
 
