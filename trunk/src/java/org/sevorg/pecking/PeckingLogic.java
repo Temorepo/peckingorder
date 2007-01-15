@@ -3,12 +3,11 @@ package org.sevorg.pecking;
 import java.awt.Point;
 import java.util.List;
 import org.sevorg.pecking.data.PeckingPiece;
-import com.threerings.presents.dobj.DSet;
 
 public abstract class PeckingLogic implements PeckingConstants
 {
 
-    public PeckingLogic(DSet<PeckingPiece> pieces)
+    public PeckingLogic(Iterable<PeckingPiece> pieces)
     {
         this._pieces = pieces;
     }
@@ -59,5 +58,5 @@ public abstract class PeckingLogic implements PeckingConstants
         return x >= 10 || x < 0 || y >= 10 || y < 0;
     }
 
-    protected DSet<PeckingPiece> _pieces;
+    protected Iterable<PeckingPiece> _pieces;
 }

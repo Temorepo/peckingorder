@@ -51,7 +51,7 @@ public interface PeckingConstants
     public static final int MARSHALL = 1;
 
     /**
-     * Second highest rank.  Shares a row in the pieces bin with the marshall.
+     * Second highest rank. Shares a row in the pieces bin with the marshall.
      */
     public static final int GENERAL = 2;
 
@@ -80,4 +80,24 @@ public interface PeckingConstants
      * ends.
      */
     public static final int WORM = 12;
+
+    /**
+     * The highest row available to red in setup
+     */
+    public static final int RED_MAX = 9;
+
+    /**
+     * The lowest row available to red in setup
+     */
+    public static final int RED_MIN = 6;
+
+    /**
+     * The lowest row available to blue in setup
+     */
+    public static final int BLUE_MIN = 0;
+
+    /**
+     * The highest row available to blue in setup
+     */
+    public static final int BLUE_MAX = 3;
 }
