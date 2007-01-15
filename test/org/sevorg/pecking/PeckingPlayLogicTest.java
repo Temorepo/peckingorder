@@ -46,7 +46,6 @@ public class PeckingPlayLogicTest extends TestCase implements PeckingConstants
         // condition
         pieces.addPiece(BLUE, CAGE_OPENER, 8, 8);
         assertFalse(logic.shouldEndGame());
-
     }
 
     public void testImmobileWithWinner()
@@ -73,8 +72,8 @@ public class PeckingPlayLogicTest extends TestCase implements PeckingConstants
     {
         PeckingPiece p = pieces.addPiece(BLUE, SCOUT, 0, 9);
         p.revealed = false;// To test that attacking with a pieces reveals it
-        checkResults(logic.move(p, 0, 0), 2, new int[][] { {SCOUT, -1, -1},
-                                                          {SCOUT, -1, -1}});
+        checkResults(logic.move(p, 0, 0), new int[][] { {SCOUT, -1, -1},
+                                                       {SCOUT, -1, -1}});
     }
 
     public void testAssassinAttackingMarshall()
@@ -83,8 +82,8 @@ public class PeckingPlayLogicTest extends TestCase implements PeckingConstants
         PeckingPiece[] results = logic.move(pieces.addPiece(RED, ASSASSIN, 1, 9),
                                             0,
                                             9);
-        checkResults(results, 2, new int[][] { {MARSHALL, -1, -1},
-                                              {ASSASSIN, 0, 9}});
+        checkResults(results, new int[][] { {MARSHALL, -1, -1},
+                                           {ASSASSIN, 0, 9}});
     }
 
     public void testMarshallAttackingAssassin()
@@ -93,52 +92,58 @@ public class PeckingPlayLogicTest extends TestCase implements PeckingConstants
         PeckingPiece[] results = logic.move(pieces.addPiece(RED, MARSHALL, 0, 9),
                                             1,
                                             9);
-        checkResults(results, 2, new int[][] { {MARSHALL, 1, 9},
-                                              {ASSASSIN, -1, -1}});
+        checkResults(results, new int[][] { {MARSHALL, 1, 9},
+                                           {ASSASSIN, -1, -1}});
     }
 
     public void testGreaterAttackingLesser()
     {
         pieces.addPiece(BLUE, 3, 1, 9);
         PeckingPiece[] results = logic.move(pieces.addPiece(RED, 2, 0, 9), 1, 9);
-        checkResults(results, 2, new int[][] { {2, 1, 9}, {3, -1, -1}});
+        checkResults(results, new int[][] { {2, 1, 9}, {3, -1, -1}});
     }
 
     public void testLesserAttackingGreater()
     {
         pieces.addPiece(BLUE, 2, 1, 9);
         checkResults(logic.move(pieces.addPiece(RED, 3, 0, 9), 1, 9),
-                     1,
-                     new int[][] {{3, -1, -1}});
+                     new int[][] { {3, -1, -1}, {2, 1, 9}});
     }
 
     public void testMarshallAttackingCage()
     {
         pieces.addPiece(BLUE, CAGE, 1, 9);
         checkResults(logic.move(pieces.addPiece(RED, 1, 0, 9), 1, 9),
-                     1,
-                     new int[][] {{MARSHALL, -1, -1}});
+                     new int[][] { {MARSHALL, -1, -1}, {CAGE, 1, 9}});
     }
 
     public void testCageOpenerAttackingCage()
     {
         pieces.addPiece(BLUE, CAGE, 1, 9);
         checkResults(logic.move(pieces.addPiece(RED, CAGE_OPENER, 0, 9), 1, 9),
-                     2,
                      new int[][] { {CAGE, -1, -1}, {CAGE_OPENER, 1, 9}});
     }
 
-    public void testIllegalMoveReturnsZeroLength()
+    public void testMoveToSelfIsIllegal()
     {
         assertEquals(0,
                      logic.move(originScout, originScout.x, originScout.y).length);
     }
 
-    private void checkResults(PeckingPiece[] results,
-                              int expectedLength,
-                              int[][] expectedValues)
+    public void testScoutMoveOverPieceIsIllegal()
     {
-        assertEquals(expectedLength, results.length);
+        assertEquals(0, logic.move(originScout, 2, 0).length);
+    }
+
+    public void testMarshallMultipleSpaceMoveIsIllegal()
+    {
+        pieces.addPiece(RED, MARSHALL, 2, 2);
+        assertEquals(0, logic.move(originScout, 4, 2).length);
+    }
+
+    private void checkResults(PeckingPiece[] results, int[][] expectedValues)
+    {
+        assertEquals(expectedValues.length, results.length);
         outer : for(int i = 0; i < expectedValues.length; i++) {
             for(int j = 0; j < results.length; j++) {
                 if(expectedValues[i][0] == results[j].rank) {
@@ -163,8 +168,9 @@ public class PeckingPlayLogicTest extends TestCase implements PeckingConstants
             add(p);
             return p;
         }
-        
-        public void removePiece(PeckingPiece piece){
+
+        public void removePiece(PeckingPiece piece)
+        {
             remove(piece);
         }
     }

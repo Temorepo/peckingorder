@@ -11,7 +11,6 @@ import java.awt.Stroke;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import org.sevorg.pecking.PeckingConstants;
 import org.sevorg.pecking.PeckingLogic;
@@ -145,12 +144,14 @@ public class PeckingBoardView extends MediaPanel implements PlaceView,
      * If this board contains a sprite for piece, remove it from both the board
      * and our piece to sprite map
      */
-    private void removeSprite(PeckingPiece piece)
+    private boolean removeSprite(PeckingPiece piece)
     {
         if(sprites.containsKey(piece)) {
             removeSprite(sprites.get(piece));
             sprites.remove(piece);
+            return true;
         }
+        return false;
     }
 
     public void selectionChanged(PeckingPiece changedPiece, boolean newValue)
@@ -209,32 +210,12 @@ public class PeckingBoardView extends MediaPanel implements PlaceView,
             gfx.setColor(Color.GREEN);
             Stroke current = gfx.getStroke();
             gfx.setStroke(FAT_STROKE);
-            if(_gameobj.phase == SETUP) {
-                int startRow, stopRow;
-                if(_ctrl.getColor() == BLUE) {
-                    startRow = BLUE_MIN;
-                    stopRow = BLUE_MAX;
-                } else {
-                    startRow = RED_MIN;
-                    stopRow = RED_MAX;
-                }
-                for(int i = 0; i < 10; i++) {
-                    for(int j = startRow; j <= stopRow; j++) {
-                        gfx.drawRect(i * PieceSprite.SIZE,
-                                     j * PieceSprite.SIZE,
-                                     PieceSprite.SIZE,
-                                     PieceSprite.SIZE);
-                    }
-                }
-            } else {
-                List<Point> legalMoves = _ctrl.createLogic()
-                        .getLegalMoves(_ctrl.getSelectedPiece());
-                for(Point poi : legalMoves) {
-                    gfx.drawRect(poi.x * PieceSprite.SIZE,
-                                 poi.y * PieceSprite.SIZE,
-                                 PieceSprite.SIZE,
-                                 PieceSprite.SIZE);
-                }
+            for(Point poi : _ctrl.createLogic()
+                    .getLegalMoves(_ctrl.getSelectedPiece())) {
+                gfx.drawRect(poi.x * PieceSprite.SIZE,
+                             poi.y * PieceSprite.SIZE,
+                             PieceSprite.SIZE,
+                             PieceSprite.SIZE);
             }
             gfx.setStroke(current);
         }
@@ -358,14 +339,10 @@ public class PeckingBoardView extends MediaPanel implements PlaceView,
                            int clickX,
                            int clickY)
         {
-            if(_ctrl.getSelectedPiece() != null) {
-                Point click = new Point(clickX, clickY);
-                for(Point p : logic.getLegalMoves(_ctrl.getSelectedPiece())) {
-                    if(click.equals(p)) {
-                        _ctrl.moveSelected(p.x, p.y);
-                        return;
-                    }
-                }
+            Point click = new Point(clickX, clickY);
+            if(logic.getLegalMoves(_ctrl.getSelectedPiece()).contains(click)) {
+                _ctrl.moveSelected(clickX, clickY);
+                return;
             }
             if(clicked != null && clicked.owner == _ctrl.getColor()
                     && !PeckingPlayLogic.isImmobile(clicked)) {
@@ -465,13 +442,18 @@ public class PeckingBoardView extends MediaPanel implements PlaceView,
         public void update(PeckingPiece piece)
         {
             if(piece.x == OFF_BOARD) {
-                removeSprite(piece);
+                if(removeSprite(piece) && piece.rank != UNKNOWN){
+                    knownPieces--;
+                }
             } else {
                 if(!sprites.containsKey(piece)) {
                     PieceSprite sprite = new PieceSprite(piece,
                                                          getLocation(piece));
                     sprites.put(piece, sprite);
                     addSprite(sprite);
+                    if(piece.rank != UNKNOWN){
+                        knownPieces++;
+                    }
                 } else {
                     sprites.get(piece).update(piece, getLocation(piece));
                 }
@@ -479,10 +461,16 @@ public class PeckingBoardView extends MediaPanel implements PlaceView,
                     sprites.get(piece).setSelected(true);
                 }
             }
-            if(sprites.size() == 40) {
+            if(knownPieces == 40 && !shownClickReady) {
                 displayFloatingText("b.click_ready", 2500);
+                //Only tell player to click ready once
+                shownClickReady = true;
             }
         }
+        
+        private int knownPieces;
+        
+        private boolean shownClickReady = false;
     }
 
     private class PostGameStrategy extends PhaseStrategy
