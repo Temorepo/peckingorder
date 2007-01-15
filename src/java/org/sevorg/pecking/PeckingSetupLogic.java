@@ -4,12 +4,11 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
 import org.sevorg.pecking.data.PeckingPiece;
-import com.threerings.presents.dobj.DSet;
 
 public class PeckingSetupLogic extends PeckingLogic
 {
 
-    public PeckingSetupLogic(DSet<PeckingPiece> pieces)
+    public PeckingSetupLogic(Iterable<PeckingPiece> pieces)
     {
         super(pieces);
     }
@@ -19,13 +18,13 @@ public class PeckingSetupLogic extends PeckingLogic
         List<Point> points = new ArrayList<Point>();
         if(p.owner == RED) {
             for(int i = 0; i < 10; i++) {
-                for(int j = 6; j < 10; j++) {
+                for(int j = RED_MIN; j <= RED_MAX; j++) {
                     points.add(new Point(i, j));
                 }
             }
         } else {
             for(int i = 0; i < 10; i++) {
-                for(int j = 0; j < 4; j++) {
+                for(int j = BLUE_MIN; j <= BLUE_MAX; j++) {
                     points.add(new Point(i, j));
                 }
             }
@@ -44,7 +43,7 @@ public class PeckingSetupLogic extends PeckingLogic
         if(isOffBoard(x, y)) {
             return new PeckingPiece[] {src.copyOffBoard(false)};
         }
-        if((src.owner == RED && y < 6) || (src.owner == BLUE && y > 3)) {
+        if((src.owner == RED && y < RED_MIN) || (src.owner == BLUE && y > BLUE_MAX)) {
             return new PeckingPiece[] {};
         }
         PeckingPiece dest = getPieceAt(x, y);

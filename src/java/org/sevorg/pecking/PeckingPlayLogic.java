@@ -4,12 +4,11 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
 import org.sevorg.pecking.data.PeckingPiece;
-import com.threerings.presents.dobj.DSet;
 
 public class PeckingPlayLogic extends PeckingLogic
 {
 
-    public PeckingPlayLogic(DSet<PeckingPiece> pieces)
+    public PeckingPlayLogic(Iterable<PeckingPiece> pieces)
     {
         super(pieces);
     }
@@ -137,16 +136,17 @@ public class PeckingPlayLogic extends PeckingLogic
         return other == null || other.owner != piece.owner;
     }
 
-    private boolean isImmobile(PeckingPiece piece)
+    public static boolean isImmobile(PeckingPiece piece)
     {
         return piece.rank == WORM || piece.rank == CAGE;
     }
 
     /**
      * @return - an array containing the pieces that would change if src moved
-     *         to x, y It can be a single piece if x, y is unoccupied or if the
-     *         piece at x, y defeats src. If the piece at x, y is defeated by
-     *         src, two pieces are returned. If this move is illegal, an array
+     *         to x, y It can be a single piece if x, y is unoccupied. If the
+     *         piece at x, y defeats src or the piece at x, y is defeated by
+     *         src, two pieces are returned. The piece that's moving off the
+     *         board is always returned first.  If this move is illegal, an array
      *         of length 0 is returned
      */
     public PeckingPiece[] move(PeckingPiece src, int x, int y)
@@ -162,24 +162,15 @@ public class PeckingPlayLogic extends PeckingLogic
         if(dest.rank == CAGE) {
             if(src.rank == CAGE_OPENER) {
                 return replace(dest, src);
-            } else {
-                if(!dest.revealed) {
-                    return new PeckingPiece[] {src.copyOffBoard(),
-                                               dest.copyRevealed()};
-                }
-                return new PeckingPiece[] {src.copyOffBoard()};
             }
+            return new PeckingPiece[] {src.copyOffBoard(), dest.copyRevealed()};
         } else if((src.rank == ASSASSIN && dest.rank == MARSHALL)
-                || (src.rank < dest.rank)) {
+                || src.rank < dest.rank) {
             return replace(dest, src);
         } else if(src.rank == dest.rank) {
             return new PeckingPiece[] {src.copyOffBoard(), dest.copyOffBoard()};
         } else {
-            if(!dest.revealed) {
-                return new PeckingPiece[] {src.copyOffBoard(),
-                                           dest.copyRevealed()};
-            }
-            return new PeckingPiece[] {src.copyOffBoard()};
+            return new PeckingPiece[] {src.copyOffBoard(), dest.copyRevealed()};
         }
     }
 
