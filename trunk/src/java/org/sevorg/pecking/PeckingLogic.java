@@ -1,7 +1,7 @@
 package org.sevorg.pecking;
 
 import java.awt.Point;
-import java.util.List;
+import java.util.Set;
 import org.sevorg.pecking.data.PeckingPiece;
 
 /**
@@ -16,8 +16,6 @@ public abstract class PeckingLogic implements PeckingConstants
     {
         this._pieces = pieces;
     }
-
-    public abstract List<Point> getLegalMoves(PeckingPiece p);
 
     public PeckingPiece getPieceAt(int x, int y)
     {
@@ -43,8 +41,12 @@ public abstract class PeckingLogic implements PeckingConstants
     }
 
     /**
-     * @return - an array containing the pieces that would change if src moved
-     *         to x, y
+     * @return - All possible x, y combinations p can move to
+     */
+    public abstract Set<Point> getLegalMoves(PeckingPiece p);
+
+    /**
+     * @return - all pieces involved if src moved to x, y
      */
     public abstract PeckingPiece[] move(PeckingPiece src, int x, int y);
 

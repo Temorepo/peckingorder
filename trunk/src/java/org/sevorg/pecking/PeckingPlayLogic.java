@@ -1,8 +1,8 @@
 package org.sevorg.pecking;
 
 import java.awt.Point;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import org.sevorg.pecking.data.PeckingPiece;
 
 public class PeckingPlayLogic extends PeckingLogic
@@ -46,6 +46,8 @@ public class PeckingPlayLogic extends PeckingLogic
     public boolean isWormCageProtected(int owner)
     {
         PeckingPiece worm = null;
+        // Find owner's worm and simultaneously check if the other player has
+        // any cage openers
         for(PeckingPiece p : _pieces) {
             if(p.rank == WORM && p.owner == owner) {
                 worm = p;
@@ -56,7 +58,13 @@ public class PeckingPlayLogic extends PeckingLogic
         if(isOffBoard(worm)) {
             return false;
         }
-        int[][] surroundingPoints = getSurroundingPoints(worm);
+        // Now that we know that there aren't any CAGE_OPENER pieces for the
+        // other player, check that all of the points around the worm are either
+        // cages or off the board
+        int[][] surroundingPoints = new int[][] { {worm.x + 1, worm.y},
+                                                 {worm.x - 1, worm.y},
+                                                 {worm.x, worm.y + 1},
+                                                 {worm.x, worm.y - 1}};
         for(int[] point : surroundingPoints) {
             if(isOffBoard(point[0], point[1])) {
                 // If a surrounding point is off the board, then the worm is
@@ -81,61 +89,65 @@ public class PeckingPlayLogic extends PeckingLogic
         return false;
     }
 
-    public List<Point> getLegalMoves(PeckingPiece p)
+    public Set<Point> getLegalMoves(PeckingPiece p)
     {
-        List<Point> points = new ArrayList<Point>();
-        if(isImmobile(p)) {
-            // That makes calculating moves easy
-        } else if(p.rank == SCOUT) {
-            int x = p.x, y = p.y;
-            while(addIfLegalAndCanContinue(p, --x, y, points)) {}
-            x = p.x;
-            while(addIfLegalAndCanContinue(p, ++x, y, points)) {}
-            x = p.x;
-            while(addIfLegalAndCanContinue(p, x, ++y, points)) {}
-            y = p.y;
-            while(addIfLegalAndCanContinue(p, x, --y, points)) {}
-        } else {
-            int[][] cardinalPoints = getSurroundingPoints(p);
-            for(int[] point : cardinalPoints) {
-                if(isLegal(p, point[0], point[1])) {
-                    points.add(new Point(point[0], point[1]));
-                }
+        Set<Point> points = new HashSet<Point>();
+        if(p == null || isImmobile(p)) {
+            return points;
+        }
+        for(int x = p.x - 1; isValid(p, x, p.y); x--) {
+            points.add(new Point(x, p.y));
+            if(getPieceAt(x, p.y) != null || p.rank != SCOUT) {
+                break;
+            }
+        }
+        for(int x = p.x + 1; isValid(p, x, p.y); x++) {
+            points.add(new Point(x, p.y));
+            if(getPieceAt(x, p.y) != null || p.rank != SCOUT) {
+                break;
+            }
+        }
+        for(int y = p.y - 1; isValid(p, p.x, y); y--) {
+            points.add(new Point(p.x, y));
+            if(getPieceAt(p.x, y) != null || p.rank != SCOUT) {
+                break;
+            }
+        }
+        for(int y = p.y + 1; isValid(p, p.x, y); y++) {
+            points.add(new Point(p.x, y));
+            if(getPieceAt(p.x, y) != null || p.rank != SCOUT) {
+                break;
             }
         }
         return points;
     }
 
-    private int[][] getSurroundingPoints(PeckingPiece p)
+    /**
+     * @return - true if piece can move into x, y ie that it's on the board, not
+     *         in the lakes and either unoccupied or occupied by the other
+     *         player's pieces. This doesn't check if piece can physically move
+     *         to x, y, just that it could conceivably be there
+     */
+    private boolean isValid(PeckingPiece piece, int x, int y)
     {
-        return new int[][] { {p.x + 1, p.y},
-                            {p.x - 1, p.y},
-                            {p.x, p.y + 1},
-                            {p.x, p.y - 1}};
-    }
-
-    private boolean addIfLegalAndCanContinue(PeckingPiece pie,
-                                             int x,
-                                             int y,
-                                             List<Point> points)
-    {
-        if(isLegal(pie, x, y)) {
-            points.add(new Point(x, y));
-        } else {
-            return false;
-        }
-        return getPieceAt(x, y) == null;
-    }
-
-    private boolean isLegal(PeckingPiece piece, int x, int y)
-    {
-        if(isOffBoard(x, y) || isInLake(x, y) || isImmobile(piece)) {
+        if(isOffBoard(x, y) || isInLake(x, y)) {
             return false;
         }
         PeckingPiece other = getPieceAt(x, y);
         return other == null || other.owner != piece.owner;
     }
 
+    /**
+     * Checks if x, y is a valid place for piece to move to on the board.
+     */
+    private boolean isLegal(PeckingPiece piece, int x, int y)
+    {
+        return getLegalMoves(piece).contains(new Point(x, y));
+    }
+
+    /**
+     * Checks if piece can't move, ie if it's a worm or cage
+     */
     public static boolean isImmobile(PeckingPiece piece)
     {
         return piece.rank == WORM || piece.rank == CAGE;
@@ -143,10 +155,10 @@ public class PeckingPlayLogic extends PeckingLogic
 
     /**
      * @return - an array containing the pieces that would change if src moved
-     *         to x, y It can be a single piece if x, y is unoccupied. If the
+     *         to x, y. It can be a single piece if x, y is unoccupied. If the
      *         piece at x, y defeats src or the piece at x, y is defeated by
      *         src, two pieces are returned. The piece that's moving off the
-     *         board is always returned first.  If this move is illegal, an array
+     *         board is always returned first. If this move is illegal, an array
      *         of length 0 is returned
      */
     public PeckingPiece[] move(PeckingPiece src, int x, int y)
@@ -175,7 +187,7 @@ public class PeckingPlayLogic extends PeckingLogic
     }
 
     /**
-     * return - an array of length 2 with the piece src at the position of the
+     * @return - an array of length 2 with the piece src at the position of the
      * piece at dest and dest off the board
      */
     private PeckingPiece[] replace(PeckingPiece dest, PeckingPiece src)

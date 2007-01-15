@@ -1,8 +1,8 @@
 package org.sevorg.pecking;
 
 import java.awt.Point;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import org.sevorg.pecking.data.PeckingPiece;
 
 public class PeckingSetupLogic extends PeckingLogic
@@ -13,9 +13,12 @@ public class PeckingSetupLogic extends PeckingLogic
         super(pieces);
     }
 
-    public List<Point> getLegalMoves(PeckingPiece p)
+    public Set<Point> getLegalMoves(PeckingPiece p)
     {
-        List<Point> points = new ArrayList<Point>();
+        Set<Point> points = new HashSet<Point>();
+        if(p == null){
+            return points;
+        }
         if(p.owner == RED) {
             for(int i = 0; i < 10; i++) {
                 for(int j = RED_MIN; j <= RED_MAX; j++) {
