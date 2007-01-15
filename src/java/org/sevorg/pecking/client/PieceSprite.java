@@ -90,15 +90,13 @@ public class PieceSprite extends Sprite implements PeckingConstants
 
             private int labelX, labelY;
         };
-        newLabel.setFont(new Font("Helvetica", Font.BOLD, 36));
+        newLabel.setFont(new Font("Helvetica", Font.BOLD, 30));
         return newLabel;
     }
 
     @Override
     public void paint(Graphics2D gfx)
     {
-        gfx.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                             RenderingHints.VALUE_ANTIALIAS_ON);
         // set our color depending on the player that owns this piece
         gfx.setColor(_piece.owner == PeckingConstants.BLUE ? Color.BLUE
                 : Color.RED);
@@ -128,5 +126,5 @@ public class PieceSprite extends Sprite implements PeckingConstants
     protected PeckingPiece _piece;
 
     /** The dimensions of our sprite in pixels. */
-    public static final int SIZE = 48;
+    public static final int SIZE = 40;
 }

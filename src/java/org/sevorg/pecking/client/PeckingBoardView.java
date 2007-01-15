@@ -171,6 +171,11 @@ public class PeckingBoardView extends MediaPanel implements PlaceView,
     @Override
     protected void paintBehind(Graphics2D gfx, Rectangle dirtyRect)
     {
+        if(_gameobj != null && _gameobj.phase == SETUP
+                && !displayedSetupMessage) {
+            displayFloatingText("b.place_pieces");
+            displayedSetupMessage = true;
+        }
         super.paintBehind(gfx, dirtyRect);
         // fill in our background color
         gfx.setColor(Color.WHITE);
@@ -236,9 +241,17 @@ public class PeckingBoardView extends MediaPanel implements PlaceView,
     }
 
     /**
-     * Floats the supplied text over the board.
+     * Floats the supplied text over the board for 1500 millis.
      */
     public void displayFloatingText(String message)
+    {
+        displayFloatingText(message, 1500);
+    }
+
+    /**
+     * Floats the supplied text over the board for duration millis.
+     */
+    public void displayFloatingText(String message, long duration)
     {
         Label label = ScoreAnimation.createLabel(_ctx.xlate("pecking", message),
                                                  Color.white,
@@ -248,7 +261,7 @@ public class PeckingBoardView extends MediaPanel implements PlaceView,
                                                  this);
         int lx = (getWidth() - label.getSize().width) / 2;
         int ly = (getHeight() - label.getSize().height) / 2;
-        addAnimation(new FloatingTextAnimation(label, lx, ly));
+        addAnimation(new FloatingTextAnimation(label, lx, ly, duration));
     }
 
     private ToyBoxContext _ctx;
@@ -264,16 +277,19 @@ public class PeckingBoardView extends MediaPanel implements PlaceView,
     private Dimension boardSize = new Dimension(10, 10);
 
     private static final BasicStroke FAT_STROKE = new BasicStroke(5);
-    
-    //Length of animations for sprite moves
-    private static final long MOVE_DELAY = 500;
 
+    private boolean displayedSetupMessage = false;
+
+    // Length of animations for sprite moves
+    private static final long MOVE_DELAY = 500;
 
     /**
      * Combination of all of the times of the animations that go into a piece
      * move
      */
-    public static final long MAX_MOVE_DELAY = MOVE_DELAY + 1000;//1000 is the label fade
+    public static final long MAX_MOVE_DELAY = MOVE_DELAY + 1000;// 1000 is the
+
+    // label fade
     private abstract class PhaseStrategy extends MouseAdapter
     {
 
@@ -301,7 +317,7 @@ public class PeckingBoardView extends MediaPanel implements PlaceView,
             if(sprite._piece.rank != UNKNOWN) {
                 return false;
             }
-            //If the step changes, change MAX_MOVE_DELAY
+            // If the step changes, change MAX_MOVE_DELAY
             Animation fader = new FadeLabelAnimation(sprite.createLabel(newPiece),
                                                      sprite.getX(),
                                                      sprite.getY(),
@@ -324,7 +340,7 @@ public class PeckingBoardView extends MediaPanel implements PlaceView,
         {
             return new Point(p.x * PieceSprite.SIZE, p.y * PieceSprite.SIZE);
         }
-        
+
         public abstract void update(PeckingPiece piece);
 
         public abstract void handle(PeckingLogic logic,
@@ -397,18 +413,24 @@ public class PeckingBoardView extends MediaPanel implements PlaceView,
                 return;
             }
             PieceSprite pieceSprite = sprites.get(piece);
-            if(halfMove != null) {
-                PieceSprite halfMoveSprite = sprites.get(halfMove);
+            if(defeatedPiece != null) {
+                // Since we've got a defeated piece, we know the piece coming in
+                // now is the victor
+                PieceSprite defeatedSprite = sprites.get(defeatedPiece);
                 long delay = 0;
+                // Fade in any pieces revealed by the move
                 if(fadeInLabel(pieceSprite, piece)
-                        || fadeInLabel(halfMoveSprite, halfMove)) {
+                        || fadeInLabel(defeatedSprite, defeatedPiece)) {
                     delay = 1000;
                 }
-                halfMoveSprite.move(createPath(halfMoveSprite, halfMove, delay));
+                defeatedSprite.move(createPath(defeatedSprite,
+                                               defeatedPiece,
+                                               delay));
                 pieceSprite.move(createPath(pieceSprite, piece, delay));
-                halfMove = null;
+                defeatedPiece = null;
             } else if(PeckingLogic.isOffBoard(piece)) {
-                halfMove = piece;
+                // If a piece is defated, it's always returned first
+                defeatedPiece = piece;
             } else {
                 pieceSprite.move(createSimpleMove(piece));
             }
@@ -419,7 +441,7 @@ public class PeckingBoardView extends MediaPanel implements PlaceView,
             return new LinePath(getLocation(piece), MOVE_DELAY);
         }
 
-        private PeckingPiece halfMove;
+        private PeckingPiece defeatedPiece;
     }
 
     public class SetupPhaseStrategy extends PhaseStrategy
@@ -456,6 +478,9 @@ public class PeckingBoardView extends MediaPanel implements PlaceView,
                 if(piece.equals(_ctrl.getSelectedPiece())) {
                     sprites.get(piece).setSelected(true);
                 }
+            }
+            if(sprites.size() == 40) {
+                displayFloatingText("b.click_ready", 2500);
             }
         }
     }
