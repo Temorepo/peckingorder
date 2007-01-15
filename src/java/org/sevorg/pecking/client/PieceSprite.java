@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.RenderingHints;
 import org.sevorg.pecking.PeckingConstants;
 import org.sevorg.pecking.data.PeckingPiece;
@@ -18,10 +19,10 @@ public class PieceSprite extends Sprite implements PeckingConstants
         super(SIZE, SIZE);
     }
 
-    public PieceSprite(PeckingPiece piece, int x, int y)
+    public PieceSprite(PeckingPiece piece, Point location)
     {
         this();
-        update(piece, x, y);
+        update(piece, location);
     }
 
     /** The dimensions of our sprite in pixels. */
@@ -38,9 +39,9 @@ public class PieceSprite extends Sprite implements PeckingConstants
      * 
      * @param piece
      */
-    public void update(PeckingPiece piece, int x, int y)
+    public void update(PeckingPiece piece, Point location)
     {
-        setLocation(x, y);
+        setLocation(location.x, location.y);
         update(piece);
     }
 

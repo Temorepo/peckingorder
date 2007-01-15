@@ -40,9 +40,6 @@ public class PeckingManager extends GameManager implements PeckingConstants,
         super.didInit();
         // get a casted reference to our game configuration
         _gameconf = (ToyBoxGameConfig)_config;
-        // this is called when our manager is created but before any
-        // game-specific actions take place; we don't yet have our game object
-        // at this point but we do have our game configuration
     }
 
     @Override
@@ -52,8 +49,6 @@ public class PeckingManager extends GameManager implements PeckingConstants,
         super.didStartup();
         // grab our own casted game object reference
         _gameobj = (PeckingObject)super._gameobj;
-        // this method is called after we have created our game object but
-        // before we do any game related things
     }
 
     @Override
@@ -192,10 +187,6 @@ public class PeckingManager extends GameManager implements PeckingConstants,
     protected void gameDidEnd()
     {
         super.gameDidEnd();
-        // this is called after the game has ended. somewhere in the game
-        // manager a call to endGame() should be made when the manager knows
-        // the game to be over and that will trigger the end-of-game processing
-        // including calling this method
         revealAllPieces();
     }
 

@@ -36,7 +36,7 @@ public class ReadyCheckBox extends JCheckBox implements PlaceView,
 
     public void actionPerformed(ActionEvent e)
     {
-        _ctrl.setReadyToPlay();
+        _ctrl.toggleReadyToPlay();
     }
 
     public void willEnterPlace(PlaceObject plobj)

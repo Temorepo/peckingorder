@@ -62,6 +62,9 @@ public class PeckingController extends GameController implements
         _color = _gameobj.getPlayerIndex(((ToyBoxContext)_ctx).getUsername());
     }
 
+    /**
+     * @return - the color of the player handled by this controller, RED or BLUE
+     */
     public int getColor()
     {
         if(_color == COLOR_UNKNOWN) {
@@ -97,24 +100,11 @@ public class PeckingController extends GameController implements
         return new PeckingPanel((ToyBoxContext)ctx, this);
     }
 
-    @Override
-    // from GameController
-    protected void gameDidStart()
-    {
-        super.gameDidStart();
-        // here we can set up anything that should happen at the start of the
-        // game
-    }
-
-    @Override
-    // from GameController
-    protected void gameDidEnd()
-    {
-        super.gameDidEnd();
-        // here we can clear out anything that needs to be cleared out at the
-        // end of a game
-    }
-
+    /**
+     * Called by the PeckingManager to indicate what oid the PeckingPiecesObject
+     * can be found under since we set ourselves as the receiver in
+     * willEnterPlace
+     */
     public void setPeckingPiecesObjectOid(int oid)
     {
         _ctx.getDObjectManager().subscribeToObject(oid, this);
@@ -129,8 +119,7 @@ public class PeckingController extends GameController implements
     {
         _pieces = object;
         for(SetListener listener : peckingPiecesListeners) {
-            object.addListener(listener);
-            addAllPiecesToListener(listener);
+            hookListenerIntoPieces(listener);
         }
         for(PeckingPiece piece : _pieces.pieces) {
             if(piece.rank == MARSHALL && piece.owner == _color) {
@@ -140,6 +129,11 @@ public class PeckingController extends GameController implements
         }
     }
 
+    /**
+     * @return - an instance of PeckingLogic appropriate for the current phase
+     *         of the game, either {@link PeckingPlayLogic} or
+     *         {@link PeckingSetupLogic}
+     */
     public PeckingLogic createLogic()
     {
         if(_gameobj.phase == SETUP) {
@@ -149,26 +143,34 @@ public class PeckingController extends GameController implements
         }
     }
 
+    /**
+     * Adds listener on the pieces set from this player's PeckingPiecesObject
+     * and fires EntryAddedEvents for each piece in it when it arrives. If
+     * pieces has already arrived from the server, this just happens
+     * immediately.
+     */
     public void addPeckingPiecesListener(SetListener listener)
     {
         peckingPiecesListeners.add(listener);
         if(_pieces != null) {
-            addAllPiecesToListener(listener);
+            hookListenerIntoPieces(listener);
         }
     }
 
     public void removePeckingPiecesListener(SetListener listener)
     {
-        if(_pieces != null && peckingPiecesListeners.remove(listener)) {
+        if(peckingPiecesListeners.remove(listener) && _pieces != null) {
             _pieces.removeListener(listener);
         }
     }
 
-    private void addAllPiecesToListener(SetListener listener)
+    /**
+     * Adds listener to _pieces and fires EntryAddedEvents for each piece in
+     * _pieces
+     */
+    private void hookListenerIntoPieces(SetListener listener)
     {
-        if(_pieces == null) {
-            return;
-        }
+        _pieces.addListener(listener);
         for(PeckingPiece piece : _pieces.pieces) {
             listener.entryAdded(new EntryAddedEvent<PeckingPiece>(_pieces.getOid(),
                                                                   PeckingPiecesObject.PIECES,
@@ -176,7 +178,11 @@ public class PeckingController extends GameController implements
         }
     }
 
-    public void setReadyToPlay()
+    /**
+     * Switch the state of the boolean in ready to play for this player in the
+     * server
+     */
+    public void toggleReadyToPlay()
     {
         _gameobj.manager.invoke("toggleReadyToPlay");
     }
@@ -190,6 +196,9 @@ public class PeckingController extends GameController implements
         _gameobj.manager.invoke("movePiece", getSelectedPiece().id, x, y);
     }
 
+    /**
+     * Set the piece selected by the player to move next to <code>p</code>
+     */
     public void setSelectedPiece(PeckingPiece p)
     {
         for(PieceSelectedListener listener : listeners) {
@@ -201,6 +210,9 @@ public class PeckingController extends GameController implements
         selectedPiece = p;
     }
 
+    /**
+     * @return - the currently selected piece
+     */
     public PeckingPiece getSelectedPiece()
     {
         return selectedPiece;
@@ -224,6 +236,7 @@ public class PeckingController extends GameController implements
 
     public void entryUpdated(EntryUpdatedEvent event)
     {
+        //In case the selected piece has its data modified
         if(event.getName().equals(PeckingPiecesObject.PIECES)) {
             if(event.getEntry().equals(getSelectedPiece())) {
                 setSelectedPiece((PeckingPiece)event.getEntry());
