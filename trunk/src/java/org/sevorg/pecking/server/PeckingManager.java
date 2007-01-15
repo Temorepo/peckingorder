@@ -148,7 +148,7 @@ public class PeckingManager extends GameManager implements PeckingConstants,
                         redWorm = p;
                     } else {
                         movePiece(p.copyWithNewPosition(redCount % 10,
-                                                        9 - redCount++ / 10));
+                                                        RED_MAX - redCount++ / 10));
                     }
                 }
             }
