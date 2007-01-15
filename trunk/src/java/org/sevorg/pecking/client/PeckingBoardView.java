@@ -264,7 +264,16 @@ public class PeckingBoardView extends MediaPanel implements PlaceView,
     private Dimension boardSize = new Dimension(10, 10);
 
     private static final BasicStroke FAT_STROKE = new BasicStroke(5);
+    
+    //Length of animations for sprite moves
+    private static final long MOVE_DELAY = 500;
 
+
+    /**
+     * Combination of all of the times of the animations that go into a piece
+     * move
+     */
+    public static final long MAX_MOVE_DELAY = MOVE_DELAY + 1000;//1000 is the label fade
     private abstract class PhaseStrategy extends MouseAdapter
     {
 
@@ -292,6 +301,7 @@ public class PeckingBoardView extends MediaPanel implements PlaceView,
             if(sprite._piece.rank != UNKNOWN) {
                 return false;
             }
+            //If the step changes, change MAX_MOVE_DELAY
             Animation fader = new FadeLabelAnimation(sprite.createLabel(newPiece),
                                                      sprite.getX(),
                                                      sprite.getY(),
@@ -314,7 +324,7 @@ public class PeckingBoardView extends MediaPanel implements PlaceView,
         {
             return new Point(p.x * PieceSprite.SIZE, p.y * PieceSprite.SIZE);
         }
-
+        
         public abstract void update(PeckingPiece piece);
 
         public abstract void handle(PeckingLogic logic,
@@ -366,7 +376,7 @@ public class PeckingBoardView extends MediaPanel implements PlaceView,
                                    500,
                                    50,
                                    1,
-                                   500,
+                                   MOVE_DELAY,
                                    ArcPath.NONE);
             } else {
                 move = createSimpleMove(piece);
@@ -406,7 +416,7 @@ public class PeckingBoardView extends MediaPanel implements PlaceView,
 
         private Path createSimpleMove(PeckingPiece piece)
         {
-            return new LinePath(getLocation(piece), 500);
+            return new LinePath(getLocation(piece), MOVE_DELAY);
         }
 
         private PeckingPiece halfMove;

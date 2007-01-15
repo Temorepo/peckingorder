@@ -16,6 +16,13 @@ import com.threerings.presents.dobj.EntryUpdatedEvent;
 import com.threerings.presents.dobj.SetListener;
 import com.threerings.toybox.util.ToyBoxContext;
 
+/**
+ * A check box that indicates if a player is ready to start the PLAY phase of
+ * the game. If it's for the local player, the checkbox is enabled once all of
+ * the pieces are on the board. Otherwise it remains disabled all the time. IN
+ * either case, when readyToPlay in PeckingObject changes for the player this
+ * represents, the status of this checkbox updates accordingly.
+ */
 public class ReadyCheckBox extends JCheckBox implements PlaceView,
         ElementUpdateListener, ActionListener, PeckingConstants, SetListener
 {

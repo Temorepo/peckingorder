@@ -25,9 +25,6 @@ public class PieceSprite extends Sprite implements PeckingConstants
         update(piece, location);
     }
 
-    /** The dimensions of our sprite in pixels. */
-    public static final int SIZE = 48;
-
     public void setSelected(boolean newValue)
     {
         selected = newValue;
@@ -129,4 +126,7 @@ public class PieceSprite extends Sprite implements PeckingConstants
     private boolean selected = false;
 
     protected PeckingPiece _piece;
+
+    /** The dimensions of our sprite in pixels. */
+    public static final int SIZE = 48;
 }
