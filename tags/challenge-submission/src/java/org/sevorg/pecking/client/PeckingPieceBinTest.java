@@ -27,7 +27,7 @@ public class PeckingPieceBinTest extends GameViewTest implements
         for(PeckingPiece p : PeckingBoardViewTest.createPieces()) {
             p.x = 7;
             p.y = 7;
-            _view.entryUpdated(new EntryUpdatedEvent(-1, PeckingPiecesObject.PIECES, p, p));
+            _view.entryUpdated(new EntryUpdatedEvent<PeckingPiece>(-1, PeckingPiecesObject.PIECES, p, p));
         }
     }
 
