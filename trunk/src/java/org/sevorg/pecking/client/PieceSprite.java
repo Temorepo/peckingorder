@@ -47,23 +47,53 @@ public class PieceSprite extends Sprite implements PeckingConstants
     public void update(PeckingPiece piece)
     {
         _piece = piece;
-        String name;
-        if(_piece.rank == CAGE) {
-            name = "B";
-        } else if(_piece.rank == WORM) {
-            name = "F";
-        } else if(_piece.rank == ASSASSIN) {
-            name = "A";
-        } else {
-            name = "" + _piece.rank;
-        }
-        if(_piece.rank != UNKNOWN
-                && (label == null || !label.getText().equals(name))) {
-            labelSize = null;
-            label = new Label(name);
-            label.setFont(new Font("Helvetica", Font.BOLD, 36));
+        if(_piece.rank != UNKNOWN && label == null) {
+            label = createLabel(piece);
         }
         invalidate();
+    }
+
+    /**
+     * @return - a Label that always draws centered over this piece
+     */
+    public Label createLabel(PeckingPiece piece)
+    {
+        String name;
+        if(piece.rank == CAGE) {
+            name = "B";
+        } else if(piece.rank == WORM) {
+            name = "F";
+        } else if(piece.rank == ASSASSIN) {
+            name = "A";
+        } else {
+            name = "" + piece.rank;
+        }
+        Label newLabel = new Label(name) {
+
+            @Override
+            public void layout(Graphics2D gfx)
+            {
+                super.layout(gfx);
+                Dimension labelSize = super.getSize();
+                labelX = _bounds.width / 2 - labelSize.width / 2;
+                labelY = _bounds.height / 2 - labelSize.height / 2;
+            }
+
+            public Dimension getSize()
+            {
+                return new Dimension(SIZE, SIZE);
+            }
+
+            @Override
+            public void render(Graphics2D gfx, float x, float y)
+            {
+                super.render(gfx, _bounds.x + labelX, _bounds.y + labelY);
+            }
+
+            private int labelX, labelY;
+        };
+        newLabel.setFont(new Font("Helvetica", Font.BOLD, 36));
+        return newLabel;
     }
 
     @Override
@@ -86,19 +116,12 @@ public class PieceSprite extends Sprite implements PeckingConstants
         }
         gfx.drawRect(px, py, pwid, phei);
         if(label != null) {
-            if(labelSize == null) {
+            if(!label.isLaidOut()) {
                 label.layout(gfx);
-                labelSize = label.getSize();
-                labelX = _bounds.width / 2 - labelSize.width / 2;
-                labelY = _bounds.height / 2 - labelSize.height / 2;
             }
-            label.render(gfx, _bounds.x + labelX, _bounds.y + labelY);
+            label.render(gfx, 0, 0);
         }
     }
-
-    private Dimension labelSize;
-
-    private int labelX, labelY;
 
     private Label label;
 
