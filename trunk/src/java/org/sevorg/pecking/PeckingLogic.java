@@ -4,6 +4,11 @@ import java.awt.Point;
 import java.util.List;
 import org.sevorg.pecking.data.PeckingPiece;
 
+/**
+ * Base class for determining the rules in Pecking Order.
+ * {@link PeckingPlayLogic} handles the rules during a game while
+ * {@link PeckingSetupLogic} handles the possibilites during setup
+ */
 public abstract class PeckingLogic implements PeckingConstants
 {
 

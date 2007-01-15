@@ -101,7 +101,7 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
         if(!event.getName().equals(PeckingPiecesObject.PIECES)) {
             return;
         }
-        pieceUpdated((PeckingPiece)event.getEntry());
+        updatePiece((PeckingPiece)event.getEntry());
     }
 
     public void entryRemoved(EntryRemovedEvent event)
@@ -112,8 +112,36 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
         if(!event.getName().equals(PeckingPiecesObject.PIECES)) {
             return;
         }
-        pieceUpdated((PeckingPiece)event.getEntry());
+        updatePiece((PeckingPiece)event.getEntry());
     }
+
+    private Point getLocation(int row, int col)
+    {
+        return new Point((int)(col * X_SHIFT), row * PieceSprite.SIZE);
+    }
+
+    private void updatePiece(PeckingPiece piece)
+    {
+        if(piece.owner != binColor) {
+            return;
+        }
+        layout.update(piece);
+    }
+
+    private PeckingObject _gameobj;
+
+    private PieceLayout layout;
+
+    private ToyBoxContext _ctx;
+
+    private PeckingController _ctrl;
+
+    private int binColor, playerColor;
+
+    /**
+     * The amount to shift each piece in a row by in pixels
+     */
+    private static final double X_SHIFT = PieceSprite.SIZE * .2;
 
     interface PieceLayout
     {
@@ -128,12 +156,11 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
         {
             if(PeckingLogic.isOffBoard(piece)
                     && !unrevealedPieces.contains(piece)) {
-                int xOffset = unrevealedSprites.size() % 8;
-                int yOffset = unrevealedSprites.size() / 8;
-                PieceSprite sprite = new PieceSprite(piece,
-                                                     (int)(xOffset * X_SHIFT),
-                                                     yOffset * PieceSprite.SIZE);
-                sprite.setRenderOrder(xOffset);
+                int col = unrevealedSprites.size() % 8;
+                int row = unrevealedSprites.size() / 8;
+                PieceSprite sprite = new PieceSprite(piece, getLocation(row,
+                                                                        col));
+                sprite.setRenderOrder(col);
                 unrevealedSprites.add(sprite);
                 addSprite(sprite);
                 unrevealedPieces.add(piece);
@@ -261,8 +288,7 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
                 column = LAST_COLUMN;// Move it all the way to the right
             }
             PieceSprite sprite = new PieceSprite(piece,
-                                                 (int)(column * X_SHIFT),
-                                                 row * PieceSprite.SIZE);
+                                                 getLocation(row, column));
             sprite.setRenderOrder(column);
             pieces[row][column] = sprite;
             addSprite(sprite);
@@ -277,24 +303,4 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
 
         private PieceSprite[][] pieces = new PieceSprite[10][8];
     }
-
-    private void pieceUpdated(PeckingPiece piece)
-    {
-        if(piece.owner != binColor) {
-            return;
-        }
-        layout.update(piece);
-    }
-
-    private PeckingObject _gameobj;
-
-    private PieceLayout layout;
-
-    private ToyBoxContext _ctx;
-
-    private PeckingController _ctrl;
-
-    private int binColor, playerColor;
-
-    private static final double X_SHIFT = PieceSprite.SIZE * .2;
 }

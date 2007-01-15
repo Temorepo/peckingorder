@@ -25,14 +25,15 @@ import com.threerings.crowd.data.PlaceObject;
 import com.threerings.media.MediaPanel;
 import com.threerings.media.animation.Animation;
 import com.threerings.media.animation.AnimationAdapter;
-import com.threerings.media.animation.AnimationWaiter;
 import com.threerings.media.animation.FadeLabelAnimation;
 import com.threerings.media.animation.FloatingTextAnimation;
 import com.threerings.media.sprite.PathAdapter;
 import com.threerings.media.sprite.Sprite;
 import com.threerings.media.util.ArcPath;
+import com.threerings.media.util.DelayPath;
 import com.threerings.media.util.LinePath;
 import com.threerings.media.util.Path;
+import com.threerings.media.util.PathSequence;
 import com.threerings.parlor.media.ScoreAnimation;
 import com.threerings.presents.dobj.AttributeChangeListener;
 import com.threerings.presents.dobj.AttributeChangedEvent;
@@ -104,9 +105,9 @@ public class PeckingBoardView extends MediaPanel implements PlaceView,
 
     private void setPhaseStrat(PhaseStrategy strat)
     {
-        removeMouseListener(phaseStrat);
-        phaseStrat = strat;
-        addMouseListener(phaseStrat);
+        removeMouseListener(_strat);
+        _strat = strat;
+        addMouseListener(_strat);
     }
 
     private void setWholeBoardDirty()
@@ -137,11 +138,12 @@ public class PeckingBoardView extends MediaPanel implements PlaceView,
 
     protected void updatePiece(PeckingPiece piece)
     {
-        phaseStrat.update(piece);
+        _strat.update(piece);
     }
 
     /**
-     * If this board contains a sprite for piece, remove it
+     * If this board contains a sprite for piece, remove it from both the board
+     * and our piece to sprite map
      */
     private void removeSprite(PeckingPiece piece)
     {
@@ -255,13 +257,13 @@ public class PeckingBoardView extends MediaPanel implements PlaceView,
 
     private PeckingController _ctrl;
 
+    private PhaseStrategy _strat = new SetupPhaseStrategy();
+
     private Map<PeckingPiece, PieceSprite> sprites = new HashMap<PeckingPiece, PieceSprite>();
 
     private Dimension boardSize = new Dimension(10, 10);
 
     private static final BasicStroke FAT_STROKE = new BasicStroke(5);
-
-    private PhaseStrategy phaseStrat = new SetupPhaseStrategy();
 
     private abstract class PhaseStrategy extends MouseAdapter
     {
@@ -278,9 +280,18 @@ public class PeckingBoardView extends MediaPanel implements PlaceView,
             handle(logic, logic.getPieceAt(clickX, clickY), clickX, clickY);
         }
 
-        protected Animation fadeInLabel(final PieceSprite sprite,
-                                        final PeckingPiece newPiece)
+        /**
+         * Fade in the text on this PieceSprite if the given new PeckingPiece
+         * for it causes a reveal.
+         * 
+         * @return - true if newPiece caused a reveal and a fade is happening
+         */
+        protected boolean fadeInLabel(final PieceSprite sprite,
+                                      final PeckingPiece newPiece)
         {
+            if(sprite._piece.rank != UNKNOWN) {
+                return false;
+            }
             Animation fader = new FadeLabelAnimation(sprite.createLabel(newPiece),
                                                      sprite.getX(),
                                                      sprite.getY(),
@@ -296,7 +307,12 @@ public class PeckingBoardView extends MediaPanel implements PlaceView,
                 }
             });
             addAnimation(fader);
-            return fader;
+            return true;
+        }
+
+        public Point getLocation(PeckingPiece p)
+        {
+            return new Point(p.x * PieceSprite.SIZE, p.y * PieceSprite.SIZE);
         }
 
         public abstract void update(PeckingPiece piece);
@@ -331,83 +347,66 @@ public class PeckingBoardView extends MediaPanel implements PlaceView,
             }
         }
 
-        private Path createSpriteMove(PieceSprite pieceSprite,
-                                      final PeckingPiece piece)
+        private Path createPath(PieceSprite sprite,
+                                final PeckingPiece piece,
+                                long delay)
         {
+            Path move;
             if(PeckingLogic.isOffBoard(piece)) {
-                pieceSprite.addSpriteObserver(new PathAdapter() {
+                sprite.addSpriteObserver(new PathAdapter() {
 
-                    public void pathCompleted(Sprite sprite,
-                                              Path path,
-                                              long when)
+                    public void pathCompleted(Sprite s, Path path, long when)
                     {
                         removeSprite(piece);
                     }
                 });
                 // CHUNK IT
-                return new ArcPath(new Point(pieceSprite.getX(),
-                                             pieceSprite.getY()),
+                move = new ArcPath(new Point(sprite.getX(), sprite.getY()),
                                    500,
                                    500,
                                    50,
                                    1,
                                    500,
                                    ArcPath.NONE);
+            } else {
+                move = createSimpleMove(piece);
             }
-            return createSimpleMove(piece);
+            if(delay > 0) {
+                return new PathSequence(new DelayPath(delay), move);
+            }
+            return move;
         }
 
         @Override
-        public void update(final PeckingPiece piece)
+        public void update(PeckingPiece piece)
         {
             if(!sprites.containsKey(piece)) {
-                int x = piece.x * PieceSprite.SIZE, y = piece.y
-                        * PieceSprite.SIZE;
-                PieceSprite sprite = new PieceSprite(piece, x, y);
+                PieceSprite sprite = new PieceSprite(piece, getLocation(piece));
                 sprites.put(piece, sprite);
                 addSprite(sprite);
                 return;
             }
-            final PieceSprite pieceSprite = sprites.get(piece);
+            PieceSprite pieceSprite = sprites.get(piece);
             if(halfMove != null) {
-                final PieceSprite halfMoveSprite = sprites.get(halfMove);
-                final Path halfMovePath = createSpriteMove(halfMoveSprite,
-                                                           halfMove);
-                final Path piecePath = createSpriteMove(pieceSprite, piece);
-                AnimationWaiter waiter = new AnimationWaiter() {
-
-                    @Override
-                    public void allAnimationsFinished()
-                    {
-                        halfMoveSprite.move(halfMovePath);
-                        pieceSprite.move(piecePath);
-                    }
-                };
-                if(pieceSprite._piece.rank == UNKNOWN) {
-                    waiter.addAnimation(fadeInLabel(pieceSprite, piece));
-                } else if(halfMoveSprite._piece.rank == UNKNOWN) {
-                    waiter.addAnimation(fadeInLabel(halfMoveSprite, halfMove));
-                } else {
-                    halfMoveSprite.move(halfMovePath);
-                    pieceSprite.move(piecePath);
+                PieceSprite halfMoveSprite = sprites.get(halfMove);
+                long delay = 0;
+                if(fadeInLabel(pieceSprite, piece)
+                        || fadeInLabel(halfMoveSprite, halfMove)) {
+                    delay = 1000;
                 }
+                halfMoveSprite.move(createPath(halfMoveSprite, halfMove, delay));
+                pieceSprite.move(createPath(pieceSprite, piece, delay));
                 halfMove = null;
+            } else if(PeckingLogic.isOffBoard(piece)) {
+                halfMove = piece;
             } else {
-                // Since the DSet has the updated piece position in it, we need
-                // to check if there's more than one piece at this position to
-                // see if it was previously unoccupied
-                if(PeckingLogic.isOffBoard(piece)) {
-                    halfMove = piece;
-                } else {
-                    pieceSprite.move(createSimpleMove(piece));
-                }
+                pieceSprite.move(createSimpleMove(piece));
             }
         }
 
         private Path createSimpleMove(PeckingPiece piece)
         {
-            int x = piece.x * PieceSprite.SIZE, y = piece.y * PieceSprite.SIZE;
-            return new LinePath(new Point(x, y), 500);
+            return new LinePath(getLocation(piece), 500);
         }
 
         private PeckingPiece halfMove;
@@ -436,14 +435,13 @@ public class PeckingBoardView extends MediaPanel implements PlaceView,
             if(piece.x == OFF_BOARD) {
                 removeSprite(piece);
             } else {
-                int x = piece.x * PieceSprite.SIZE, y = piece.y
-                        * PieceSprite.SIZE;
                 if(!sprites.containsKey(piece)) {
-                    PieceSprite sprite = new PieceSprite(piece, x, y);
+                    PieceSprite sprite = new PieceSprite(piece,
+                                                         getLocation(piece));
                     sprites.put(piece, sprite);
                     addSprite(sprite);
                 } else {
-                    sprites.get(piece).update(piece, x, y);
+                    sprites.get(piece).update(piece, getLocation(piece));
                 }
                 if(piece.equals(_ctrl.getSelectedPiece())) {
                     sprites.get(piece).setSelected(true);
