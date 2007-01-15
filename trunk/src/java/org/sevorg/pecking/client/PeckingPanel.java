@@ -76,8 +76,8 @@ public class PeckingPanel extends PlacePanel implements PeckingConstants
             }
         };
         turnDisplay.setOpaque(false);
-        turnDisplay.setWinnerText(ctx.xlate("pecking", "m.winner"));
-        turnDisplay.setDrawText(ctx.xlate("pecking", "m.draw"));
+        turnDisplay.setWinnerText(msgs.get("m.winner"));
+        turnDisplay.setDrawText(msgs.get("m.draw"));
         Rectangle2D square = new Rectangle2D.Float(0, 0, 12, 12);
         turnDisplay.setPlayerIcons(new Icon[] {new ShapeIcon(square,
                                                              Color.RED,
