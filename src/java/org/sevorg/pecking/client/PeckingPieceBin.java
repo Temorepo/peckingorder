@@ -12,6 +12,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
+import javax.swing.SwingUtilities;
 import org.sevorg.pecking.PeckingConstants;
 import org.sevorg.pecking.PeckingLogic;
 import org.sevorg.pecking.data.PeckingObject;
@@ -28,10 +31,20 @@ import com.threerings.presents.dobj.EntryUpdatedEvent;
 import com.threerings.presents.dobj.SetListener;
 import com.threerings.toybox.util.ToyBoxContext;
 
+/**
+ * A display for pieces that are off the board. It uses HiddenPieceLayout to
+ * show the other player's pieces during the setup phase. Otherwise it uses
+ * RevealedPieceLayout to show the known pieces for a particular owner off the
+ * board
+ * 
+ */
 public class PeckingPieceBin extends MediaPanel implements SetListener,
         PeckingConstants, PlaceView, AttributeChangeListener
 {
 
+    /**
+     * Create a bin for the pieces of binOwner, either RED or BLUE
+     */
     public PeckingPieceBin(ToyBoxContext ctx,
                            PeckingController ctrl,
                            int binOwner)
@@ -115,6 +128,9 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
         updatePiece((PeckingPiece)event.getEntry());
     }
 
+    /**
+     * @return - the pixel x, y of a piece on row, col
+     */
     private Point getLocation(int row, int col)
     {
         return new Point((int)(col * X_SHIFT), row * PieceSprite.SIZE);
@@ -175,9 +191,22 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
         private Set<PeckingPiece> unrevealedPieces = new HashSet<PeckingPiece>();
     }
 
+    /**
+     * A piece layout for when the rank of the pieces are known. It stuffs the
+     * pieces with only one instance of their rank two ranks to a row, otherwise
+     * it gives each rank a row. This gives a total of 10 rows.
+     * 
+     * If added as a mouse listener to the bin, it handles moving pieces on and
+     * off the board for setup.
+     */
     class RevealedPieceLayout extends MouseAdapter implements PieceLayout,
             PieceSelectedListener
     {
+
+        public RevealedPieceLayout(PlaceObject plobj)
+        {
+            _ctrl.addPieceSelectedListener(this);
+        }
 
         public void mousePressed(MouseEvent e)
         {
@@ -197,11 +226,6 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
                     _ctrl.setSelectedPiece(pieces[clickRow][LAST_COLUMN]._piece);
                 }
             }
-        }
-
-        public RevealedPieceLayout(PlaceObject plobj)
-        {
-            _ctrl.addPieceSelectedListener(this);
         }
 
         public void selectionChanged(PeckingPiece changedPiece, boolean newValue)
@@ -230,6 +254,9 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
             return null;
         }
 
+        /**
+         * Finds the index of the last column with a piece in it starting at 0
+         */
         private int findLastFilledSlot(int row)
         {
             int i;
@@ -253,6 +280,7 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
                     int row = existingSpriteCoords.y, col = existingSpriteCoords.x;
                     removeSprite(pieces[row][col]);
                     pieces[row][col] = null;
+                    // Select the next piece in the bin for rapid fire setup
                     for(int i = row; i < pieces.length; i++) {
                         for(int j = pieces[i].length - 1; j >= 0; j--) {
                             if(pieces[i][j] != null) {
@@ -287,15 +315,42 @@ public class PeckingPieceBin extends MediaPanel implements SetListener,
             } else if(piece.rank == GENERAL || piece.rank == WORM) {
                 column = LAST_COLUMN;// Move it all the way to the right
             }
-            PieceSprite sprite = new PieceSprite(piece,
-                                                 getLocation(row, column));
+            final PieceSprite sprite = new PieceSprite(piece,
+                                                       getLocation(row, column));
             sprite.setRenderOrder(column);
             pieces[row][column] = sprite;
-            addSprite(sprite);
-            if(_gameobj.phase == SETUP) {
+            if(_gameobj.phase == PLAY) {
+                // Add the piece to the bin after the animation on the board has
+                // finished if we're in the PLAY phase so we don't ruin the
+                // surprise
+                if(timer == null) {
+                    timer = new Timer("BinPieceAdder", true);
+                }
+                // I like the java.util.Timer's mechanism for scheduling one
+                // execution tasks better than Swing's timer, but we have to
+                // execute on the EDT. Thus you have this ridiculous anonymous
+                // inner class nesting.
+                timer.schedule(new TimerTask() {
+
+                    @Override
+                    public void run()
+                    {
+                        SwingUtilities.invokeLater(new Runnable() {
+
+                            public void run()
+                            {
+                                addSprite(sprite);
+                            }
+                        });
+                    }
+                }, PeckingBoardView.MAX_MOVE_DELAY);
+            } else {
+                addSprite(sprite);
                 _ctrl.setSelectedPiece(piece);
             }
         }
+
+        private Timer timer;
 
         int LAST_COLUMN = 7;
 
